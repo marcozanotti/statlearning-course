@@ -44,6 +44,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-## Lecture 3: Explainable AI
+## Lecture 4: Explainable AI
 
 
