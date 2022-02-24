@@ -1,0 +1,80 @@
+---
+title: "Statistical Learning"
+author: "Marco Zanotti"
+date: "2021-2022"
+output:
+  pdf_document: default
+  rmdformats::downcute:
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+&nbsp;  
+
+**Statistical Learning** is part of the 
+[Machine Learning, Statistical Learning, Deep Learning & Artificial Intelligence](https://www.unimi.it/en/education/degree-programme-courses/2022/machine-learning-statistical-learning-deep-learning-and-artificial-intelligence)
+course.  
+The course introduces students to the most important algorithmical and 
+statistical machine learning tools. The first part of the course focuses 
+on the statistical foundations and on the methodological aspects. 
+The second part is more hands-on, with laboratories to help students 
+develop their software skills.
+
+
+## Course Structure
+
+The **Statistical Learning** part of the course aims at teaching a
+methodological and practical overview to statistical learning methods. 
+The emphasis is on the applications and state-of-the-art techniques 
+are presented through hands-on labs with **R**.  
+
+* 10 hours: practical lectures on the main contents  
+
+
+## Contents
+
+* Tidymodels Basics  
+* Tidymodels Features Engineering (Recipes)  
+* Tidymodels Modelling (Engines & Workflows)  
+* Tidymodels Hyperparameter Tuning (Tune)  
+* Neural Networks with Keras  
+* Automatic Machine Learning with H2O  
+* Explainable AI with DALEX & LIME  
+
+Methods:  
+- Linear Regression, Logistic Regression, Ridge, LASSO, Elastic Net, MARS  
+- CART, Bagging, Random Forest, XGBoost, Cubist  
+- SVM, KNN, Naive Bayes    
+- Multi Layer Perceptron, Deep Neaural Networks  
+- AutoML  
+
+
+\pagebreak
+
+
+## Duration & Calendar
+
+The course is divided into 5 lectures (2 hours each).
+
+1. Friday 2022-05-20, 16.30 - 18.30
+2. Friday 2022-05-27, 16.30 - 18.30
+3. Friday 2022-06-10, 16.30 - 18.30
+4. Friday 2022-06-17, 16.30 - 18.30
+5. Friday 2022-06-24, 16.30 - 18.30
+
+Lectures take place at University of Milan, Via Conservatorio 7, and online.   
+
+
+## Requirements
+
+Requirements:
+
+* Lecture 0 - Tidyverse  
+
+
+For more information about the course contact zanottimarco17@gmail.com
+or look at the 
+[Course Syllabus](https://marcozanotti.github.io/statlearning-course/general-infos/statlearn_syllabus.html)

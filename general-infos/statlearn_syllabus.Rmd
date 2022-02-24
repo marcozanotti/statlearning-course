@@ -1,0 +1,45 @@
+---
+title: "Statistical Learning  \n  - Course Syllabus -"
+author: "Marco Zanotti"
+date: "2021-2022"
+output:
+  pdf_document: default
+  rmdformats::downcute:
+    highlight: tango
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Lecture 0 - Requirements: Tidyverse
+
+**Tidyverse**:  
+- Core Tidyverse    
+- Wrangle (tidyr & dplyr)   
+- Program (purrr)  
+
+**R Code Evaluation Methods**:  
+- Standard Evaluation  
+- Non-Standard Evaluation  
+- Tidy Evaluation  
+
+**Pipe Operator**:  
+- Basic Piping  
+- Argument Placeholder  
+- Re-using Placeholder for Attributes  
+
+
+## Lecture 1: Tidymodels
+
+
+
+## Lecture 2: Neural Networks with Keras
+
+
+
+## Lecture 3: Explainable AI
+
+
