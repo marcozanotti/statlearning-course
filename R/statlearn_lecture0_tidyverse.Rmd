@@ -1,0 +1,2760 @@
+---
+title: "| Statistical Learning \n Lecture 0: Tidyverse"
+author: "Marco Zanotti"
+date: "2021-2022"
+output:
+  rmdformats::downcute:
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+# Tidyverse 
+
+The tidyverse is an opinionated collection of R packages designed for
+data science. All packages share an underlying design philosophy,
+grammar, and data structures.
+
+[**tidyverse**](https://www.tidyverse.org/)  
+
+
+## Core Tidyverse 
+
+[**tibble**](https://tibble.tidyverse.org/)  
+
+A tibble, or tbl_df, is a modern reimagining of the data.frame, keeping 
+what time has proven to be effective, and throwing out what is not. 
+Tibbles are data.frames that are lazy and surly: they do less (i.e. they 
+don’t change variable names or types, and don’t do partial matching) and 
+complain more (e.g. when a variable does not exist). This forces you to 
+confront problems earlier, typically leading to cleaner, more expressive 
+code. Tibbles also have an enhanced print() method which makes them easier 
+to use with large datasets containing complex objects.  
+
+[**readr**](https://readr.tidyverse.org/)  
+
+The goal of readr is to provide a fast and friendly way to read rectangular 
+data (like csv, tsv, and fwf). It is designed to flexibly parse many types 
+of data found in the wild, while still cleanly failing when data unexpectedly 
+changes.  
+
+[**stringr**](https://stringr.tidyverse.org/)  
+
+Strings are not glamorous, high-profile components of R, but they do play 
+a big role in many data cleaning and preparation tasks. The stringr package 
+provide a cohesive set of functions designed to make working with strings 
+as easy as possible.
+stringr is built on top of stringi, which uses the ICU C library to provide 
+fast, correct implementations of common string manipulations. stringr 
+focuses on the most important and commonly used string manipulation 
+functions whereas stringi provides a comprehensive set covering almost 
+anything you can imagine. If you find that stringr is missing a function 
+that you need, try looking in stringi. Both packages share similar 
+conventions, so once you’ve mastered stringr, you should find stringi 
+similarly easy to use.  
+
+[**forcats**](https://forcats.tidyverse.org/)  
+
+R uses factors to handle categorical variables, variables that have a fixed 
+and known set of possible values. Factors are also helpful for reordering 
+character vectors to improve display. The goal of the forcats package is to 
+provide a suite of tools that solve common problems with factors, including 
+changing the order of levels or the values.  
+
+[**tidyr**](https://tidyr.tidyverse.org/)  
+
+The goal of tidyr is to help you create tidy data. Tidy data is data where:  
+  1. Every column is variable  
+  2. Every row is an observation  
+  3. Every cell is a single value  
+  
+Tidy data describes a standard way of storing data that is used wherever 
+possible throughout the tidyverse. If you ensure that your data is tidy, 
+you’ll spend less time fighting with the tools and more time working on your
+analysis. Learn more about tidy data in vignette("tidy-data").  
+
+[**dplyr**](https://dplyr.tidyverse.org/)  
+
+dplyr is a grammar of data manipulation, providing a consistent set of 
+verbs that help you solve the most common data manipulation challenges:  
+  1. mutate() adds new variables that are functions of existing variables  
+  2. select() picks variables based on their names  
+  3. filter() picks cases based on their values  
+  4. summarise() reduces multiple values down to a single summary  
+  5. arrange() changes the ordering of the rows  
+  
+These all combine naturally with group_by() which allows you to perform 
+any operation “by group”. You can learn more about them in vignette("dplyr"). 
+As well as these single-table verbs, dplyr also provides a variety of
+two-table verbs, which you can learn about in vignette("two-table").  
+
+[**ggplot2**](https://ggplot2.tidyverse.org/)  
+
+ggplot2 is a system for declaratively creating graphics, based on 
+The Grammar of Graphics. You provide the data, tell ggplot2 how to map 
+variables to aesthetics, what graphical primitives to use, and it takes 
+care of the details.  
+
+[**purrr**](https://purrr.tidyverse.org/)  
+
+purrr enhances R’s functional programming (FP) toolkit by providing a 
+complete and consistent set of tools for working with functions and vectors.
+If you’ve never heard of FP before, the best place to start is the family 
+of map() functions which allow you to replace many for loops with code that 
+is both more succinct and easier to read.  
+
+
+## Import
+
+As well as readr, for reading flat files, the tidyverse package installs a 
+number of other packages for reading data:  
+
+  - DBI for relational databases  
+  - haven for SPSS, Stata, and SAS data  
+  - httr for web APIs  
+  - readxl for .xls and .xlsx sheets  
+  - googlesheets4 for Google Sheets via the Sheets API v4  
+  - googledrive for Google Drive files  
+  - rvest for web scraping  
+  - jsonlite for JSON  
+  - xml2 for XML.  
+
+
+## Wrangle
+
+In addition to tidyr, and dplyr, there are five packages (including stringr 
+and forcats) which are designed to work with specific types of data:  
+
+  - lubridate for dates and date-times  
+  - hms for time-of-day values  
+  - blob for storing blob (binary) data.  
+
+**dplyr backends**  
+
+There are also two packages that allow you to interface with different 
+backends using the same dplyr syntax:  
+
+  - dbplyr allows you to use remote database tables by converting dplyr 
+    code into SQL  
+  - dtplyr provides a data.table backend by automatically translating 
+    to the equivalent, but usually much faster, data.table code.  
+
+
+## Program
+
+In addition to purrr, which provides very consistent and natural methods 
+for iterating on R objects, there are two additional tidyverse packages 
+that help with general programming challenges:  
+
+  - magrittr provides the pipe, %>% used throughout the tidyverse. 
+    It also provide a number of more specialized piping operators 
+    (like %$% and %<>%) that can be useful in other places  
+  - glue provides an alternative to paste() that makes it easier to 
+    combine data and strings.  
+
+
+## Model
+
+[**tidymodels**](https://www.tidymodels.org/)  
+
+Modeling with the tidyverse uses the collection of tidymodels packages
+The tidymodels framework is a collection of packages for modeling and 
+machine learning using tidyverse principles.  
+
+
+
+# R Code Evaluation Methods
+
+## Standard Evaluation
+
+https://www.brodieg.com/2020/05/05/on-nse/
+
+When we type a simple expression at the R prompt and hit ENTER, R computes 
+its value (a.k.a. evaluates it):
+
+```{r}
+w <- c("am", "I", "global")
+rev(w) # reverse the order of `w`
+```
+
+The process of evaluation in R is mostly about looking things up rather 
+than computing them. In our example, when we hit ENTER R first looks for 
+the named objects in our expression: rev, and w. Lookups are done through 
+data structures called environments.
+
+After the lookup rev(w) becomes:
+
+```{r}
+(function(x) UseMethod("rev"))(c("am", "I", "global"))
+```
+
+rev is replaced by the definition of the function from the base environment, 
+and w by the character vector from the workspace. The workspace, also known 
+as the global environment, is where name -> value mappings created at the R 
+prompt are kept (e.g. w <- c("am", "I", "global")).
+
+After the initial substitution of rev and w for the function and its 
+argument, R will call (i.e “run”) the function. This means repeating the 
+lookup-and-substitute process on any R expressions contained in the body 
+of the function. Each time a function is called a new environment is created, 
+enclosed by the Function Environment, and with the function 
+parameter -> value mappings as its Frame. This new environment becomes 
+the Evaluation Environment for the expressions in the function body.
+Once the function Evaluation Environment is set up, R can proceed with 
+the lookup-and-substitute process on the body of the function. In this 
+case there is just the one expression UseMethod("rev") in the body.
+
+
+## Non-Standard Evaluation
+
+http://adv-r.had.co.nz/Computing-on-the-language.html
+https://www.brodieg.com/2020/05/05/on-nse/
+
+R has powerful tools for computing not only on values, but also on the 
+actions that lead to those values. If you’re coming from another programming 
+language, they are one of the most surprising features of R. Consider the 
+following simple snippet of code that plots a sine curve:
+
+```{r}
+values <- seq(0, 2 * pi, length = 100)
+sinx <- sin(values)
+plot(x = values, y = sinx, type = "l")
+```
+
+Look at the labels on the axes. How did R know that the variable on the x 
+axis is called x and the variable on the y axis is called sinx? In most
+programming languages, you can only access the values of a function’s 
+arguments. In R, you can also access the code used to compute them. 
+This makes it possible to evaluate code in non-standard ways: to use what 
+is known as non-standard evaluation (NSE). 
+NSE is particularly useful for functions when doing interactive data 
+analysis because it can dramatically reduce the amount of typing.
+
+
+## Tidy Evaluation
+
+Most tidyverse functions use tidy evaluation in some way. Tidy evaluation is a 
+special type of non-standard evaluation used throughout the tidyverse. 
+There are two basic forms:
+  
+  - arrange(), count(), filter(), group_by(), mutate(), and summarise() 
+    use data masking so that you can use data variables as if they were 
+    variables in the environment 
+    (i.e. you write my_variable not df$my_variable)
+
+  - across(), relocate(), rename(), select(), and pull() use tidy selection 
+    so you can easily choose variables based on their position, name, 
+    or type (e.g. starts_with("x") or is.numeric)
+
+To determine whether a function argument uses data masking or tidy selection, 
+look at the documentation: in the arguments list, you’ll see 
+<data-masking> or <tidy-select>.
+
+Data masking and tidy selection make interactive data exploration fast 
+and fluid, but they add some new challenges when you attempt to use them 
+indirectly such as in a for loop or a function.
+
+
+### Data Masking
+
+Data masking makes data manipulation faster because it requires less typing. 
+In most (but not all1) base R functions you need to refer to variables with $, 
+leading to code that repeats the name of the data frame many times:
+
+```{r}
+starwars
+starwars[starwars$homeworld == "Naboo" & starwars$species == "Human", ]
+```
+ 
+The dplyr equivalent of this code is more concise because data masking allows 
+you to need to type starwars once:
+ 
+```{r}
+filter(starwars, homeworld == "Naboo" & species == "Human")
+```
+ 
+Data- and env-variables
+The key idea behind data masking is that it blurs the line between the two 
+different meanings of the word “variable”:
+
+  - env-variables are “programming” variables that live in an environment. 
+    They are usually created with <-
+
+  - data-variables are “statistical” variables that live in a data frame. 
+    They usually come from data files (e.g. .csv, .xls), or are created 
+    manipulating existing variables.
+
+To make those definitions a little more concrete, take this piece of code:
+   
+```{r}
+df <- data.frame(x = runif(3), y = runif(3))
+df$x
+```
+ 
+It creates a env-variable, df, that contains two data-variables, x and y. 
+Then it extracts the data-variable x out of the env-variable df using $.
+
+
+### Tidy Select
+
+Data masking makes it easy to compute on values within a dataset. 
+Tidy selection is a complementary tool that makes it easy to work with 
+the columns of a dataset. This provides a miniature domain specific language 
+that makes it easy to select columns by name, position, or type. For example:
+  
+```{r}
+select(df, 1) # selects the first column 
+select(df, last_col()) # selects the last column
+select(df, c(x, y)) # selects columns x, and y
+select(df, starts_with("x")) # selects all columns whose name starts with “x”
+select(df, ends_with("y")) # selects all columns whose name ends with “y”
+select(df, where(is.numeric)) # selects all numeric columns
+```
+
+
+
+# Pipe Operator
+
+The [magrittr](https://magrittr.tidyverse.org/) 
+package offers a set of operators which make your code more
+readable by:  
+
+  - structuring sequences of data operations left-to-right
+    (as opposed to from the inside and out)  
+  - avoiding nested function calls  
+  - minimizing the need for local variables and function definitions  
+  - making it easy to add steps anywhere in the sequence of operations  
+
+The operators pipe their left-hand side values forward into expressions
+that appear on the right-hand side, i.e. one can replace f(x) with x %>% f(),
+where %>% is the (main) pipe-operator. When coupling several function
+calls with the pipe-operator, the benefit will become more apparent.  
+
+```{r}
+library(magrittr)
+```
+
+Consider this example:
+
+```{r}
+the_data <- starwars %>%
+  filter(height > 200) %>%
+  mutate(mass_lbs = mass * 2.205) %>% # convert kg to lbs
+  select(name, height, mass, mass_lbs)
+the_data
+```
+
+Four operations are performed to arrive at the desired data set,
+and they are written in a natural order: the same as the order of execution.
+Also, no temporary variables are needed. If yet another operation is required,
+it is straightforward to add to the sequence of operations wherever
+it may be needed.  
+
+Without piping this results into:  
+
+```{r}
+the_data <-
+  select(
+    mutate(
+      filter(starwars, height > 200),
+      mass_lbs = mass * 2.205
+    ),
+    name, height, mass, mass_lbs
+  )
+```
+
+CTRL + MAIUSC + M is the RStudio shortcut for the %>%.  
+Since R version 4.1, the native pipe operator |> has been introduced.  
+
+
+## Basic Piping
+
+```{r}
+x %>% f() is equivalent to f(x)
+x %>% f(y) is equivalent to f(x, y)
+x %>% f() %>% g() %>% h() is equivalent to h(g(f(x)))
+```
+
+“Equivalent” is not technically exact: evaluation is non-standard,
+and the left-hand side is evaluated before passed on to the right-hand
+side expression. However, in most cases this has no practical implication.  
+
+
+## Argument Placeholder
+
+```{r}
+x %>% f(y, .) is equivalent to f(y, x)
+x %>% f(y, z = .) is equivalent to f(y, z = x)
+```
+
+The . has a placeholder function when coupled with the pipe.  
+
+
+## Re-using Placeholder for Attributes
+
+It is straightforward to use the placeholder several times in a
+right-hand side expression. However, when the placeholder only appears
+in a nested expressions magrittr will still apply the first-argument rule.
+The reason is that in most cases this results more clean code.  
+
+```{r}
+x %>% f(y = nrow(.), z = ncol(.)) is equivalent to f(x, y = nrow(x), z = ncol(x))
+```
+
+this behavior can be overruled by enclosing the right-hand side in braces:  
+
+```{r}
+x %>% {f(y = nrow(.), z = ncol(.))} is equivalent to f(y = nrow(x), z = ncol(x))
+```
+
+
+
+# Data Manipulation
+
+## Tibble
+
+A tibble, or tbl_df, is a modern reimagining of the data.frame, keeping
+what time has proven to be effective, and throwing out what is not.
+Tibbles are data.frames that are lazy and surly: they do less (i.e. they
+don’t change variable names or types, and don’t do partial matching) and
+complain more (e.g. when a variable does not exist). This forces you to
+confront problems earlier, typically leading to cleaner, more expressive
+code. Tibbles also have an enhanced print() method which makes them easier
+to use with large datasets containing complex objects.
+
+```{r}
+library(tibble)
+```
+
+Create a tibble from an existing object with as_tibble():  
+
+```{r}
+df <- data.frame(a = 1:3, b = letters[1:3], c = Sys.Date() - 1:3)
+df
+str(df)
+```
+
+```{r}
+tbl <- as_tibble(df)
+str(tbl)
+```
+
+This will work for reasonable inputs that are already data.frames,
+lists, matrices, or tables.  
+
+You can also create a new tibble from column vectors with tibble():  
+
+```{r}
+tibble(x = 1:5, y = 1, z = x ^ 2 + y)
+```
+
+tibble() does much less than data.frame(): it never changes the type
+of the inputs (e.g. it never converts strings to factors!), it never
+changes the names of variables, it only recycles inputs of length 1,
+and it never creates row.names().  
+You can read more about these features in vignette("tibble").  
+
+You can define a tibble row-by-row with tribble():  
+
+```{r}
+tribble(
+  ~ x, ~ y,  ~ z,
+  "a", 2,  3.6,
+  "b", 1,  8.5
+)
+```
+
+
+
+## Stringr
+
+Strings are not glamorous, high-profile components of R, but they do play
+a big role in many data cleaning and preparation tasks. The stringr package
+provide a cohesive set of functions designed to make working with strings
+as easy as possible.  
+
+stringr is built on top of stringi, which uses the ICU C library to provide
+fast, correct implementations of common string manipulations. stringr
+focusses on the most important and commonly used string manipulation
+functions whereas stringi provides a comprehensive set covering almost
+anything you can imagine. If you find that stringr is missing a function
+that you need, try looking in stringi. Both packages share similar
+conventions, so once you’ve mastered stringr, you should find stringi
+similarly easy to use.  
+
+```{r}
+library(stringr)
+```
+
+All functions in stringr start with str_ and take a vector of strings as
+the first argument.  
+Most string functions work with regular expressions, a concise language
+for describing patterns of text.  
+
+
+### Modify
+
+```{r}
+str_c("hello", "world")
+str_c("hello", "world", sep = " ")
+
+str_dup("hello", 5)
+
+str_flatten(c("hello", "world"))
+str_flatten(c("hello", "world"), collapse = "_ _")
+
+# Padding
+str_pad("hello", width = 8, side = "left", pad = "x")
+str_pad("hello", width = 8, side = "right", pad = "y")
+str_pad("hello", width = 7, side = "both", pad = "z")
+str_pad("hello", 10, pad = c("-", "_", " "))
+
+# Case
+str_to_lower("HEllO")
+str_to_upper("hello")
+str_to_title("hello world")
+str_to_sentence("hello world")
+
+# Sorting
+str_order(c("world", "hello"))
+str_sort(c("world", "hello"))
+
+# Splitting
+str_split("hello", "e")
+str_split("hello", "e") %>% unlist()
+
+x <- "This string is moderately long"
+rbind(
+  str_trunc(x, 20, "right"),
+  str_trunc(x, 20, "left"),
+  str_trunc(x, 20, "center")
+)
+
+# Trimming
+str_trim("hello")
+str_trim("hello ")
+str_trim("  hello   world  ")
+
+str_squish("hello")
+str_squish("hello ")
+str_squish("  hello   world  ")
+```
+
+
+### Count Patterns
+
+```{r}
+str_length("hello")
+
+str_count("hello", "h") # h letter
+str_count("hello;", "\\w") # word + numbers
+str_count("hello", "\\d") # digits
+```
+
+
+### Detect Patterns
+
+```{r}
+str_locate("hello", "e")
+str_locate("hello", "l")
+
+str_detect("hello", "h")
+str_detect("hello", "\\w")
+str_detect("hello", "\\d")
+
+str_which(c("hello", "world"), "ll")
+
+str_starts("hello", "h")
+str_ends("hello", "\\s") # space
+```
+
+
+### Extract Patterns
+
+```{r}
+str_sub("hello", 2, 3)
+str_sub("hello world", 4, 8)
+
+str_extract("hello", "el")
+str_extract("hello", "lo")
+str_extract(c("hello", "world"), "w")
+str_extract_all(c("hello", "world"), "w")
+str_extract_all(c("hello", "world"), "w") %>% unlist()
+```
+
+
+### Removing & Replacing Patterns
+
+```{r}
+str_remove("hello", "h")
+str_remove(c("hello", "world"), "l")
+str_remove_all(c("hello world", "hello world"), "l")
+
+str_replace("hello", "h", "c")
+str_replace(c("hello world", "hello world"), "l", "t")
+str_replace_all(c("hello world", "hello world"), "l", "t")
+```
+
+
+### Testing Patterns
+
+```{r}
+str_view("hello world!", "world")
+str_view("hello world!", "\\d")
+str_view("hello world!", "\\w")
+str_view("hello world!", "\\w*")
+str_view("hello world!", "\\w*\\s\\w+")
+str_view("hello world!", "\\w{3}")
+```
+
+
+### Base R Functions
+
+```{r}
+grep("e", "hello")
+grep("e", c("hello", "world"))
+grep("e", c("hello", "world"), value = TRUE)
+grepl("e", c("hello", "world"))
+gsub("e", "a", "hello")
+nchar("hello")
+paste("hello", "world")
+tolower("HEllO")
+toupper("hello")
+```
+
+
+
+## Forcats
+
+R uses factors to handle categorical variables, variables that have a fixed
+and known set of possible values. Factors are also helpful for reordering
+character vectors to improve display. The goal of the forcats package is to
+provide a suite of tools that solve common problems with factors, including
+changing the order of levels or the values.  
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(forcats)
+
+str(gss_cat)
+```
+
+
+### Count Levels
+
+```{r}
+levels(gss_cat$partyid)
+
+fct_count(gss_cat$partyid)
+gss_cat %>% count(partyid)
+```
+
+
+### Order Levels
+
+```{r}
+levels(gss_cat$rincome)
+```
+
+We can use the function fct_relevel() when we need to manually reorder
+our factor levels. In addition to the factor, you give it a character
+vector of level names, and specify where you want to move them. It defaults
+to moving them to the front, but you can move them after another level
+with the argument after. If you want to move it to the end, you set after
+equal to Inf.  
+
+```{r}
+fct_relevel(gss_cat$rincome, c("Lt $1000", "$1000 to 2999")) %>%
+  levels()
+```
+
+It’s often useful to change the order of the factor levels in a visualisation.
+We can improve visualization by reordering the levels of relig using
+fct_reorder().  
+
+```{r}
+rincome_summary <- gss_cat %>%
+  group_by(rincome) %>%
+  summarise(
+    age = mean(age, na.rm = TRUE),
+    tvhours = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+```
+
+```{r}
+# Reorder income by average age  
+levels(rincome_summary$rincome)
+fct_reorder(rincome_summary$rincome, rincome_summary$age) %>%
+  levels()
+
+# unordered chart, difficult to read
+rincome_summary %>%
+  ggplot(aes(age, rincome)) +
+  geom_point()
+
+# ordered chart, easy to read
+rincome_summary %>%
+  mutate(rincome = fct_reorder(rincome, age)) %>%
+  ggplot(aes(age, rincome)) +
+  geom_point()
+```
+
+Finally, for bar plots, you can use fct_infreq() to order levels in
+increasing frequency: this is the simplest type of reordering because
+it doesn’t need any extra variables. You may want to combine with fct_rev().  
+
+```{r}
+fct_infreq(gss_cat$rincome) %>%
+  levels()
+
+fct_infreq(gss_cat$rincome) %>%
+  fct_rev() %>%
+  levels()
+
+gss_cat %>%
+  mutate(rincome = rincome %>% fct_infreq() %>% fct_rev()) %>%
+  ggplot(aes(rincome)) +
+  geom_bar() +
+  coord_flip()
+```
+
+
+### Modify Levels
+
+```{r}
+levels(gss_cat$partyid)
+```
+
+More powerful than changing the orders of the levels is changing their
+values. This allows you to clarify labels for publication, and collapse
+levels for high-level displays. The most general and powerful tool is
+fct_recode(). It allows you to recode, or change, the value of each level.  
+
+fct_recode() will leave levels that aren’t explicitly mentioned as is,
+and will warn you if you accidentally refer to a level that doesn’t exist.
+To combine groups, you can assign multiple old levels to the same new level.  
+
+```{r}
+fct_recode(
+  gss_cat$partyid,
+  "Republican, strong" = "Strong republican",
+  "Republican, weak" = "Not str republican",
+  "Independent, near rep" = "Ind,near rep",
+  "Independent, near dem" = "Ind,near dem",
+  "Democrat, weak" = "Not str democrat",
+  "Democrat, strong" = "Strong democrat"
+) %>%
+  fct_count()
+
+fct_recode(
+  gss_cat$partyid,
+  "Republican, strong" = "Strong republican",
+  "Republican, weak" = "Not str republican",
+  "Independent, near rep" = "Ind,near rep",
+  "Independent, near dem" = "Ind,near dem",
+  "Democrat, weak" = "Not str democrat",
+  "Democrat, strong" = "Strong democrat",
+  "Other" = "No answer",
+  "Other" = "Don't know",
+  "Other" = "Other party"
+) %>%
+  fct_count()
+```
+
+If you want to collapse a lot of levels, fct_collapse() is a useful
+variant of fct_recode(). For each new variable, you can provide a vector
+of old levels  
+
+```{r}
+fct_collapse(
+  gss_cat$partyid,
+  other = c("No answer", "Don't know", "Other party"),
+  rep = c("Strong republican", "Not str republican"),
+  ind = c("Ind,near rep", "Independent", "Ind,near dem"),
+  dem = c("Not str democrat", "Strong democrat")
+) %>%
+  fct_count()
+```
+
+Sometimes you just want to lump together all the small groups to make
+a plot or table simpler. That’s the job of fct_lump().  
+The default behavior is to progressively lump together the smallest
+groups, ensuring that the aggregate is still the smallest group.  
+We can use the n parameter to specify how many groups (excluding other)
+we want to keep.  
+
+```{r}
+fct_lump(gss_cat$partyid) %>%
+  fct_count()
+
+fct_lump(gss_cat$partyid, n = 5) %>%
+  fct_count()
+
+fct_lump(gss_cat$partyid, n = 3, other_level = "Extra") %>%
+  fct_count()
+```
+
+
+
+## Lubridate
+
+Date-time data can be frustrating to work with in R. R commands
+for date-times are generally unintuitive and change depending on the
+type of date-time object being used. Moreover, the methods we use with
+date-times must be robust to time zones, leap days, daylight savings times,
+and other time related quirks, and R lacks these capabilities in some
+situations. Lubridate makes it easier to do the things R does with date-times
+and possible to do the things R does not.  
+
+```{r}
+library(lubridate)
+```
+
+
+### Parse
+
+```{r}
+# Date
+d1 <- ymd("2022-01-01")
+d2 <- ymd("2022-01-02")
+class(d1)
+
+# Datetime
+t1 <- ymd_hms("2022-01-01 10:30:15")
+t2 <- ymd_hms("2022-01-02 22:30:15")
+class(t1)
+```
+
+
+### Differences
+
+```{r}
+# Time Differences
+d2 - d1
+difftime(d2, d1, units = "auto")
+difftime(d2, d1, units = "hours")
+difftime(d2, d1, units = "weeks")
+d1 - d2
+```
+
+
+### Extract Time Periods
+
+```{r}
+second(t1)
+minute(t1)
+hour(t1)
+day(t1)
+week(t1)
+month(t1)
+month(t1, label = TRUE, abbr = TRUE)
+month(t1, label = TRUE, abbr = FALSE)
+quarter(t1)
+semester(t1)
+year(t1)
+
+it_locale <- "it_IT.UTF-8"
+en_locale <- "en_US.UTF-8"
+Sys.getlocale()
+Sys.setlocale("LC_ALL", locale = en_locale)
+month(d1, label = TRUE, abbr = TRUE)
+month(d1, label = TRUE, abbr = FALSE)
+Sys.setlocale("LC_ALL", locale = it_locale)
+```
+
+
+### Round
+
+```{r}
+t2
+round_date(t2, unit = "hour")
+round_date(t2, unit = "month")
+
+floor_date(t2, unit = "hour")
+ceiling_date(t2, unit = "hour")
+```
+
+
+
+## Readr
+
+The goal of readr is to provide a fast and friendly way to read rectangular
+data (like csv, tsv, and fwf). It is designed to flexibly parse many types
+of data found in the wild, while still cleanly failing when data unexpectedly
+changes.  
+
+```{r}
+library(readr)
+readr_example()
+csv_example <- readr_example("mtcars.csv")
+read_csv(csv_example)
+```
+
+The readxl package makes it easy to get data out of Excel and into R.
+Compared to many of the existing packages (e.g. gdata, xlsx, xlsReadWrite)
+readxl has no external dependencies, so it’s easy to install and use on all
+operating systems. It is designed to work with tabular data.
+readxl supports both the legacy .xls format and the modern xml-based .xlsx
+format. The libxls C library is used to support .xls, which abstracts away
+many of the complexities of the underlying binary format. To parse .xlsx,
+we use the RapidXML C++ library.  
+
+```{r}
+install.packages("readxl")
+library(readxl)
+
+readxl_example()
+xlsx_example <- readxl_example("datasets.xlsx")
+excel_sheets(xlsx_example)
+read_excel(xlsx_example, sheet = "mtcars")
+```
+
+
+# Data Wrangling
+
+## Tidyr
+
+The goal of tidyr is to help you create tidy data. Tidy data is data where:  
+
+  1. Every column is variable  
+  2. Every row is an observation  
+  3. Every cell is a single value  
+  
+Tidy data describes a standard way of storing data that is used wherever 
+possible throughout the tidyverse. If you ensure that your data is tidy, 
+you’ll spend less time fighting with the tools and more time working on your
+analysis. Learn more about tidy data in vignette("tidy-data").  
+
+tidyr functions fall into five main categories:  
+
+  - “Pivotting” which converts between long and wide forms. tidyr 1.0.0 
+    introduces pivot_longer() and pivot_wider(), replacing the older 
+    spread() and gather() functions. See vignette("pivot") for more details  
+  - “Rectangling”, which turns deeply nested lists (as from JSON) into 
+    tidy tibbles. See unnest_longer(), unnest_wider(), hoist(), and 
+    vignette("rectangle") for more details  
+  - Nesting converts grouped data to a form where each group becomes a 
+    single row containing a nested data frame, and unnesting does the 
+    opposite. See nest(), unnest(), and vignette("nest") for more details  
+  - Splitting and combining character columns. Use separate() and extract() 
+    to pull a single character column into multiple columns; use unite() 
+    to combine multiple columns into a single character column  
+  - Make implicit missing values explicit with complete(); make explicit 
+    missing values implicit with drop_na(); replace missing values with 
+    next/previous value with fill(), or a known value with replace_na().  
+
+Real datasets can, and often do, violate the three precepts of tidy data in 
+almost every way imaginable. While occasionally you do get a dataset that 
+you can start analyzing immediately, this is the exception, not the rule. 
+Here we go through the five most common problems with messy datasets, 
+along with their remedies:  
+
+  1. Column headers are values, not variable names  
+  2. Multiple variables are stored in one column  
+  3. Variables are stored in both rows and columns  
+  4. Multiple types of observational units are stored in the same table  
+  5. A single observational unit is stored in multiple tables.  
+
+Surprisingly, most messy datasets, including types of messiness not 
+explicitly described above, can be tidied with a small set of tools: 
+pivoting (longer and wider) and separating.  
+
+```{r}
+library(tidyr)
+```
+
+
+### Column Headers
+
+A common type of messy dataset is tabular data designed for presentation, 
+where variables form both the rows and columns, and column headers are 
+values, not variable names. While I would call this arrangement messy, 
+in some cases it can be extremely useful. It provides efficient storage
+for completely crossed designs, and it can lead to extremely efficient 
+computation if desired operations can be expressed as matrix operations.  
+
+```{r}
+relig_income
+relig_income %>% 
+  pivot_longer(-religion, names_to = "income", values_to = "frequency")
+
+billboard
+names(billboard)
+billboard %>% 
+  pivot_longer(
+    wk1:wk76, 
+    names_to = "week", 
+    values_to = "rank", 
+    values_drop_na = TRUE
+  )
+```
+
+
+### Multiple Variables
+
+After pivoting columns, the key column is sometimes a combination of 
+multiple underlying variable names. Column headers in this format are 
+often separated by a non-alphanumeric character (e.g. ., -, _, :), or 
+have a fixed width format, like in this dataset. separate() makes it 
+easy to split a compound variables into individual variables. You can 
+either pass it a regular expression to split on (the default is to 
+split on non-alphanumeric columns), or a vector of character positions.  
+
+```{r}
+# re-create the tuberculosis dataset
+# gender & age into column names
+tb <- tibble(
+  iso2 = c(rep("IT", 5), rep("EN", 5)),
+  year = c(1991:1995, 1991:1995),
+  m014 = sample.int(20, 10),
+  m1525 = c(NA, sample.int(20, 9)),
+  m2534 = sample.int(20, 10),
+  f014 = sample.int(20, 10),
+  f1525 = sample.int(20, 10),
+  f2534 = sample.int(20, 10)
+)
+tb
+tb %>% 
+  pivot_longer(
+    !c(iso2, year), 
+    names_to = "name", 
+    values_to = "n"
+  ) %>% 
+  separate(col = name, into = c("sex", "age"), sep = 1) %>% 
+  fill(n, .direction = "down")
+
+tb %>% 
+  pivot_longer(
+    !c(iso2, year), 
+    names_to = c("sex", "age"), 
+    names_pattern = "(.)(.+)",
+    values_to = "n"
+  ) %>% 
+  drop_na()
+```
+
+
+### Variables in Rows and Columns
+
+The most complicated form of messy data occurs when variables are stored 
+in both rows and columns.  
+
+Re-create the weather dataset.  
+It has variables in individual columns (id, year, month), spread across 
+columns (day, d1-d31) and across rows (tmin, tmax) (minimum and maximum 
+temperature).  
+This dataset is mostly tidy, but the element column is not a variable; 
+it stores the names of variables.   
+Fixing this requires widening the data: pivot_wider() is inverse of 
+pivot_longer(), pivoting element and value back out across multiple columns.  
+
+```{r}
+weather <- tibble(
+  id = c(rep("X1", 16), rep("X2", 16)),
+  year = rep(c(rep(2000, 4), rep(2005, 4), rep(2000, 4), rep(2005, 4)), 2),
+  month = rep(c(1, 4, 7, 10), 8),
+  element = rep(c(rep("tmin", 8), rep("tmax", 8)), 2),
+  d1 = runif(32, min = 0, max = 30),
+  d10 = runif(32, min = 0, max = 30),
+  d20 = runif(32, min = 0, max = 30),
+  d30 = runif(32, min = 0, max = 30)
+) %>% 
+  arrange(id, year, month)
+weather
+
+weather %>% 
+  pivot_longer(
+    d1:d30, 
+    names_to = "day", 
+    values_to = "value"
+  ) %>% 
+  pivot_wider(
+    names_from = element,
+    values_from = value
+  )
+```
+
+
+### Multiple Types
+
+Datasets often involve values collected at multiple levels, on different 
+types of observational units. During tidying, each type of observational 
+unit should be stored in its own table. This is closely related to the 
+idea of database normalization, where each fact is expressed in only one 
+place. It’s important because otherwise inconsistencies can arise.  
+
+The billboard dataset actually contains observations on two types of 
+observational units: the song and its rank in each week. This manifests 
+itself through the duplication of facts about the song: artist is repeated 
+many times. This dataset needs to be broken down into two pieces: a song 
+dataset which stores artist and song name, and a ranking dataset which 
+gives the rank of the song in each week.  
+
+Normalization is useful for tidying and eliminating inconsistencies. 
+However, there are few data analysis tools that work directly with 
+relational data, so analysis usually also requires denormalization or 
+the merging the datasets back into one table.  
+
+```{r}
+billboard_long <- billboard %>% 
+  pivot_longer(
+    wk1:wk76, 
+    names_to = "week", 
+    values_to = "rank", 
+    values_drop_na = TRUE
+  ) %>% 
+  mutate(
+    week = as.integer(stringr::str_remove(week, "wk")),
+    date = as.Date(date.entered) + 7 * (week - 1),
+    date.entered = NULL
+  )
+billboard_long
+
+song <- billboard_long %>% 
+  distinct(artist, track) %>%
+  mutate(song_id = row_number(), .before = everything())
+song
+
+rank <- billboard_long %>%
+  left_join(song, by = c("artist", "track")) %>%
+  select(song_id, date, week, rank)
+rank
+```
+
+
+### One Type in Multiple Tables
+
+It’s also common to find data values about a single type of observational 
+unit spread out over multiple tables or files. These tables and files are 
+often split up by another variable, so that each represents a single year, 
+person, or location. As long as the format for individual records is 
+consistent, this is an easy problem to fix:  
+
+  - Read the files into a list of tables  
+  - For each table, add a new column that records the original file name 
+    (the file name is often the value of an important variable)  
+  - Combine all tables into a single table.  
+
+
+## Dplyr
+
+dplyr is a grammar of data manipulation, providing a consistent set of 
+verbs that help you solve the most common data manipulation challenges:  
+
+  1. mutate() adds new variables that are functions of existing variables  
+  2. select() picks variables based on their names  
+  3. filter() picks cases based on their values  
+  4. summarise() reduces multiple values down to a single summary  
+  5. arrange() changes the ordering of the rows  
+  
+These all combine naturally with group_by() which allows you to perform 
+any operation “by group”. You can learn more about them in vignette("dplyr"). 
+As well as these single-table verbs, dplyr also provides a variety of
+two-table verbs, which you can learn about in vignette("two-table").  
+
+When working with data you must:  
+
+  - Figure out what you want to do  
+  - Describe those tasks in the form of a computer program  
+  - Execute the program  
+  
+The dplyr package makes these steps fast and easy:  
+
+  - By constraining your options, it helps you think about your data 
+    manipulation challenges  
+  - It provides simple “verbs”, functions that correspond to the most 
+    common data manipulation tasks, to help you translate your thoughts
+    into code  
+  - It uses efficient backends, so you spend less time waiting for the 
+    computer  
+    
+This section introduces you to dplyr’s basic set of tools, and shows you 
+how to apply them to data frames. dplyr also supports databases via the 
+dbplyr package, once you’ve installed, read vignette("dbplyr") to learn more.  
+
+```{r}
+library(dplyr)
+```
+
+dplyr aims to provide a function for each basic verb of data manipulation. 
+These verbs can be organised into three categories based on the component 
+of the dataset that they work with:    
+
+  1. Rows:  
+  
+     - filter() chooses rows based on column values  
+     - slice() chooses rows based on location  
+     - arrange() changes the order of the rows  
+     
+  2. Columns:  
+  
+     - select() changes whether or not a column is included  
+     - relocate() changes the order of the columns  
+     - rename() changes the name of columns  
+     - mutate() changes the values of columns and creates new columns 
+     
+  3. Groups:  
+  
+     - group_by() performs operations on variables' categories   
+     - summarise() collapses a group into a single row  
+     
+  4. Joins:  
+  
+     - left_join()  
+     - right_join()  
+     - inner_join()  
+     - full_join()  
+     - anti_join()  
+     
+  5. Utilities:  
+  
+     - distinct()  
+     - pull()  
+     - bind_rows() / bind_columns()  
+     - rowwise()  
+
+
+### Rows
+
+```{r}
+# filter
+starwars %>% filter(skin_color == "light", eye_color == "brown")
+
+starwars %>% filter(skin_color == "light" & eye_color == "brown")
+
+starwars %>% filter(skin_color == "light" | eye_color == "brown")
+
+# slice
+starwars %>% slice(5:10)
+
+starwars %>% slice(-1)
+
+starwars %>% slice_head(n = 3)
+
+starwars %>% slice_tail(n = 3)
+
+starwars %>% slice_sample(n = 5)
+
+starwars %>% slice_sample(prop = .2, replace = TRUE)
+
+starwars %>% slice_max(height, n = 3)
+
+starwars %>% slice_min(height, n = 3)
+
+# arrange
+starwars %>% arrange(height, mass)
+
+starwars %>% arrange(desc(height))
+
+starwars %>% arrange(name)
+```
+
+
+### Columns
+
+```{r}
+# select
+starwars %>% select(height, mass, hair_color, skin_color, eye_color, birth_year)
+
+starwars %>% select(height:birth_year)
+
+starwars %>% select(!(height:birth_year))
+
+starwars %>% select(ends_with("color"))
+
+starwars %>% select(starts_with("h"))
+
+starwars %>% select(matches("^h"))
+
+starwars %>% select(contains("_"))
+
+vars <- c("name", "height")
+starwars %>% select(all_of(vars), "mass")
+
+starwars %>% select(height:birth_year, everything()) relocate with select
+
+# relocate
+starwars %>% relocate(sex:homeworld, .before = height)
+
+starwars %>% relocate(sex:homeworld, .after = mass)
+
+# rename
+starwars %>% rename(home_world = homeworld, person = name)
+
+# mutate
+starwars %>% mutate(height_m = height / 100)
+
+starwars %>%
+  mutate(height_m = height / 100) %>%
+  select(name, height_m, height, everything())
+
+starwars %>% mutate(height_m = height / 100, .before = height) 
+
+starwars %>%
+  mutate(
+    height_m = height / 100,
+    BMI = mass / (height_m ^ 2) allows direct reference & multiple operations
+  ) %>%
+  select(name, BMI, everything())
+
+starwars %>%
+  transmute( mutate that keeps only modified columns
+    height_m = height / 100,
+    BMI = mass / (height_m^2)
+  )
+
+starwars %>% mutate(across(where(is.numeric), ~ .x / 100))
+```
+
+
+### Groups
+
+```{r}
+# summarise
+starwars %>% summarise(mean(height, na.rm = TRUE))
+
+starwars %>%
+  summarise(
+    mean_height = mean(height, na.rm = TRUE),
+    mean_mass = mean(mass, na.rm = TRUE),
+    sd_height = sd(height, na.rm = TRUE),
+    sd_mass = sd(mass, na.rm = TRUE)
+  )
+
+starwars %>% 
+  summarise(across(c(height, mass), c(mean, sd), na.rm = TRUE))
+
+starwars %>% 
+  summarise(across(c(height, mass), list(mu = mean, sigma = sd), na.rm = TRUE))
+
+starwars %>% 
+  summarise(across(c(height, mass), list(mu = mean, sigma = sd), na.rm = TRUE)) %>% 
+  pivot_longer(cols = everything()) %>% 
+  separate(name, into = c("type", "measure"), sep = "_") %>% 
+  pivot_wider(id_cols = type, names_from = measure, values_from = value)
+
+starwars %>% 
+  summarise(across(where(is.character), ~ length(unique(.x))))
+
+starwars %>% 
+  summarise(across(where(is.numeric), ~ mean(.x, na.rm = TRUE)))
+
+min_max <- list(
+  min = ~ min(.x, na.rm = TRUE), 
+  max = ~ max(.x, na.rm = TRUE)
+)
+starwars %>% summarise(across(where(is.numeric), min_max))
+
+# group_by
+starwars %>% group_by(species)
+starwars %>% group_by(species) %>% tally(sort = TRUE)
+
+starwars %>% group_by(sex, gender)
+starwars %>% group_by(sex, gender) %>% tally(sort = TRUE)
+
+starwars %>% group_by(species) %>% ungroup() %>% tally(sort = TRUE)
+
+# group_by + summarise
+starwars %>% 
+  group_by(species) %>%
+  summarise(n = n(), height = mean(height, na.rm = TRUE))
+
+starwars %>% 
+  group_by(sex, gender) %>%
+  summarise(n = n(), height = mean(height, na.rm = TRUE))
+
+group_by + slice
+starwars %>% 
+  relocate(species) %>% 
+  group_by(species) %>%
+  slice(1:2)
+
+starwars %>% 
+  relocate(sex, gender) %>% 
+  group_by(sex, gender) %>%
+  slice(1:2)
+
+group_by + mutate
+starwars %>% 
+  select(name, homeworld, height, mass) %>% 
+  group_by(homeworld) %>% 
+  mutate(
+    mean_mass = mean(mass, na.rm = TRUE),
+    standard_mass = mass - mean(mass, na.rm = TRUE),
+    rank = min_rank(height)
+  ) %>% 
+  ungroup()
+
+# count
+starwars %>%
+  count(species)
+
+starwars %>%
+  group_by(species) %>% 
+  summarise(n = n())
+```
+
+
+### Joins
+
+It’s rare that a data analysis involves only a single table of data. 
+In practice, you’ll normally have many tables that contribute to an analysis, 
+and you need flexible tools to combine them. In dplyr, there are three 
+families of verbs that work with two tables at a time:  
+
+  - Mutating joins, which add new variables to one table from matching 
+    rows in another  
+  - Filtering joins, which filter observations from one table based on 
+    whether or not they match an observation in the other table  
+  - Set operations, which combine the observations in the data sets as 
+    if they were set elements.  
+    
+All two-table verbs work similarly. The first two arguments are x and y, 
+and provide the tables to combine. The output is always a new table with 
+the same type as x.  
+
+```{r}
+library(nycflights13)
+flights
+weather
+planes
+airports
+
+flights_small <- flights %>% 
+  select(year:day, hour, origin, dest, tailnum, carrier)
+flights_small
+
+flights_small %>% left_join(airlines)
+
+flights_small %>% left_join(weather)
+
+flights_small %>% left_join(planes, by = "tailnum")
+
+flights_small %>% left_join(airports, c("dest" = "faa"))
+```
+
+
+### Utilities
+
+```{r}
+distinct
+starwars
+starwars %>% distinct()
+starwars %>% distinct(sex)
+starwars %>% distinct(sex, .keep_all = TRUE)
+
+pull
+starwars[["name"]]
+starwars %>% pull(name)
+
+bind_rows / bind_columns
+luke <- starwars %>% 
+  select(name, homeworld, species) %>% 
+  filter(name == "Luke Skywalker")
+luke
+obi <- starwars %>% 
+  select(name, homeworld, species) %>% 
+  filter(name == "Obi-Wan Kenobi")
+obi
+
+bind_rows(luke, obi)
+bind_cols(luke, obi)
+```
+
+
+### rowwise
+
+dplyr, and R in general, are particularly well suited to performing 
+operations over columns, and performing operations over rows is much harder. 
+In this vignette, you’ll learn dplyr’s approach centered around the 
+row-wise data frame created by rowwise().  
+
+There are three common use cases that we discuss in this vignette:  
+
+  - Row-wise aggregates (e.g. compute the mean of x, y, z).  
+  - Calling a function multiple times with varying arguments.  
+  - Working with list-columns.  
+  
+These types of problems are often easily solved with a for loop, but it’s 
+nice to have a solution that fits naturally into a pipeline.  
+
+```{r}
+starwars %>% 
+  select(name, height, mass) %>% 
+  mutate(average = mean(c(height, mass), na.rm = TRUE))
+
+starwars %>% 
+  select(name, height, mass) %>% 
+  rowwise() %>% 
+  mutate(average = mean(c(height, mass), na.rm = TRUE))
+
+starwars %>% 
+  select(name, height, mass) %>% 
+  summarise(average = mean(c(height, mass), na.rm = TRUE))
+
+starwars %>% 
+  select(name, height, mass) %>% 
+  rowwise() %>% 
+  summarise(average = mean(c(height, mass), na.rm = TRUE))
+
+starwars %>% 
+  select(name, height, mass) %>% 
+  rowwise(name) %>% 
+  summarise(average = mean(c(height, mass), na.rm = TRUE))
+```
+
+
+
+## Dbplyr
+
+dbplyr is the database backend for dplyr. It allows you to use remote 
+database tables as if they are in-memory data frames by automatically 
+converting dplyr code into SQL.  
+To learn more about why you might use dbplyr instead of writing SQL, 
+see vignette("sql"). To learn more about the details of the SQL 
+translation, see vignette("translation-verb") and 
+vignette("translation-function").  
+
+```{r}
+library(dbplyr, warn.conflicts = TRUE)
+library(DBI)
+```
+
+dbplyr is designed to work with database tables as if they were local 
+data frames. Database connections are coordinated by the DBI package. 
+Learn more at https://dbi.r-dbi.org/  
+
+To demonstrate this first create an in-memory SQLite 
+database and copy over a dataset.  
+
+```{r}
+con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+copy_to(con, mtcars)
+```
+
+Now you can retrieve a table using tbl()  
+
+```{r}
+mtcars_db <- tbl(con, "mtcars")
+mtcars_db
+```
+
+All dplyr calls are evaluated lazily, generating SQL that is only sent 
+to the database when you request the data.  
+
+```{r}
+# lazily generates query
+summary_query <- mtcars_db %>% 
+  group_by(cyl) %>% 
+  summarise(mpg = mean(mpg, na.rm = TRUE)) %>% 
+  arrange(desc(mpg))
+
+# see query
+summary_query %>% show_query()
+
+# execute query and retrieve results
+summary_query %>% collect()
+res <- summary_query %>% collect()
+res
+```
+
+
+
+# Data Visualization
+
+## Ggplot2
+
+ggplot2 is a system for declaratively creating graphics, based on
+The Grammar of Graphics. You provide the data, tell ggplot2 how to map
+variables to aesthetics, what graphical primitives to use, and it takes
+care of the details.  
+
+R has several systems for making graphs, but ggplot2 is one of the most
+elegant and most versatile. ggplot2 implements the grammar of graphics,
+a coherent system for describing and building graphs. With ggplot2, you
+can do more faster by learning one system and applying it in many places.
+Throughout this section we will dive into ggplot2 using the mpg dataframe.  
+
+```{r}
+library(ggplot2)
+
+#MPG dataset
+mpg
+str(mpg)
+?mpg
+
+# Diamonds dataset
+diamonds
+str(diamonds)
+?diamonds
+```
+
+
+### Initialization
+
+A ggplot2 chart is created with two main functions:  
+
+  1. ggplot() initializes a ggplot object. It can be used to declare the input
+     data frame for a graphic and to specify the set of plot aesthetics
+     intended to be common throughout all subsequent layers unless
+     specifically overridden  
+  2. geom_...() represents the layers of the plot, that is the type of chart
+     one wants to draw (that is points, lines, bars, etc.)  
+     
+Moreover, in order to draw the plot, it is necessary to provide the data and
+to map the desired aesthetics.
+
+```{r}
+# initializes the pane to the plot
+ggplot()
+
+# adds a desired layer
+ggplot() +
+  geom_point()
+
+# provides the dataframe
+ggplot(data = mpg)
+
+# maps the variables
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+With ggplot2, you begin a plot with the function ggplot(). ggplot()
+creates a coordinate system that you can add layers to. The first argument
+of ggplot() is the dataset to use in the graph.  
+
+You complete your graph by adding one or more layers to ggplot().
+The function geom_point() adds a layer of points to your plot, which
+creates a scatterplot. ggplot2 comes with many geom functions that each
+add a different type of layer to a plot. You’ll learn a whole bunch of
+them throughout this chapter.  
+
+Each geom function in ggplot2 takes a mapping argument. This defines how
+variables in your dataset are mapped to visual properties. The mapping
+argument is always paired with aes(), and the x and y arguments of aes()
+specify which variables to map to the x and y axes. ggplot2 looks for
+the mapped variables in the data argument, in this case, mpg.  
+
+```{r}
+# Graphing Template
+ggplot(data = <DATA>) +
+  <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>))
+```
+
+
+### Aesthetics Mappings
+
+You can add a third variable, like class, to a two dimensional scatter plot
+by mapping it to an aesthetic. An aesthetic is a visual property of the
+objects in your plot. Aesthetics include things like the size, the shape,
+or the color of your points. You can display a point
+in different ways by changing the values of its aesthetic properties.
+Since we already use the word “value” to describe data, let’s use the word
+“level” to describe aesthetic properties. Here we change the levels of a
+point’s size, shape, and color to make the point small, triangular, or blue.  
+
+```{r}
+mpg$class %>% table()
+
+# coloring points by class using color aesthetic
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, col = class))
+```
+
+To map an aesthetic to a variable, associate the name of the aesthetic to
+the name of the variable inside aes(). ggplot2 will automatically assign
+a unique level of the aesthetic (here a unique color) to each unique value
+of the variable, a process known as scaling. ggplot2 will also add a legend
+that explains which levels correspond to which values.  
+
+```{r}
+# changing the size of points by class using size aesthetic
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, size = class))
+
+# changing the transparency of points by class using alpha aesthetic
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
+
+# changing the shape of points by class using shape aesthetic
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+```
+
+For each aesthetic, you use aes() to associate the name of the aesthetic
+with a variable to display. The aes() function gathers together each of
+the aesthetic mappings used by a layer and passes them to the layer’s
+mapping argument. The syntax highlights a useful insight about x and y:
+the x and y locations of a point are themselves aesthetics, visual
+properties that you can map to variables to display information about
+the data.  
+
+Once you map an aesthetic, ggplot2 takes care of the rest. It selects
+a reasonable scale to use with the aesthetic, and it constructs a legend
+that explains the mapping between levels and values. For x and y aesthetics,
+ggplot2 does not create a legend, but it creates an axis line with tick
+marks and a label. The axis line acts as a legend; it explains the mapping
+between locations and values.  
+
+You can also set the aesthetic properties of your geom manually.
+Here, the color doesn’t convey information about a variable, but
+only changes the appearance of the plot. To set an aesthetic manually,
+set the aesthetic by name as an argument of your geom function; i.e.
+it goes outside of aes(). You’ll need to pick a level that makes
+sense for that aesthetic: the name of a color as a character string;
+the size of a point in mm; the shape of a point as a number.  
+
+```{r}
+# manual aesthetic
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy), col = "blue")
+```
+
+
+### Geometries
+
+Each plot uses a different visual object to represent the data.
+In ggplot2 syntax, we say that they use different geoms.
+A geom is the geometrical object that a plot uses to represent data.
+People often describe plots by the type of geom that the plot uses.
+For example, bar charts use bar geoms, line charts use line geoms,
+boxplots use boxplot geoms, and so on. Scatterplots break the trend;
+they use the point geom. As we see above, you can use different geoms
+to plot the same data. To change the geom in your plot, change the
+geom function that you add to ggplot().  
+
+```{r}
+# points
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+# smooth line
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+
+Every geom function in ggplot2 takes a mapping argument. However,
+not every aesthetic works with every geom. You could set the shape of
+a point, but you couldn’t set the “shape” of a line. On the other hand,
+you could set the linetype of a line. geom_smooth() will draw a
+different line, with a different linetype, for each unique value of
+the variable that you map to linetype.  
+
+```{r}
+# does not work properly
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, shape = drv))
+
+# changing line type by drv
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+```
+
+It is also possible to use more than one aesthetic into a single geom.  
+
+```{r}
+# changing line type and color by drv
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv, col = drv))
+```
+
+Many geoms, like geom_smooth(), use a single geometric object to display
+multiple rows of data. For these geoms, you can set the group aesthetic
+to a categorical variable to draw multiple objects. ggplot2 will draw
+a separate object for each unique value of the grouping variable.
+In practice, ggplot2 will automatically group the data for these geoms
+whenever you map an aesthetic to a discrete variable (as in the linetype
+example). It is convenient to rely on this feature because the group
+aesthetic by itself does not add a legend or distinguishing features
+to the geoms.  
+
+```{r}
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+
+grouping by drv
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, group = drv))
+
+ggplot(data = mpg) +
+  geom_smooth(
+    mapping = aes(x = displ, y = hwy, color = drv),
+    show.legend = FALSE
+  )
+```
+
+One may want to display multiple geoms in the same plot. To do this simply
+add multiple geom functions to ggplot().  
+
+```{r}
+# point + smooth
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+
+This, however, introduces some duplication in our code. Imagine if you
+wanted to change the y-axis to display cty instead of hwy. You’d need to
+change the variable in two places, and you might forget to update one.
+You can avoid this type of repetition by passing a set of mappings to
+ggplot(). ggplot2 will treat these mappings as global mappings that
+apply to each geom in the graph.  
+
+```{r}
+# global mapping, point + smooth
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_smooth()
+```
+
+If you place mappings in a geom function, ggplot2 will treat them as local
+mappings for the layer. It will use these mappings to extend or overwrite
+the global mappings for that layer only. This makes it possible to display
+different aesthetics in different layers.  
+
+```{r}
+# global mapping x & y, local mapping col, point + smooth
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth()
+```
+  
+You can use the same idea to specify different data for each layer.
+Here, our smooth line displays just a subset of the mpg dataset,
+the subcompact cars. The local data argument in geom_smooth() overrides
+the global data argument in ggplot() for that layer only.  
+
+```{r}
+# global data into point + local data into smooth
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE)
+```
+
+
+### Statistical Transformations
+
+Consider a basic bar chart, as drawn with geom_bar().  
+
+```{r}
+# geom_bar with default stat_count
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut))
+```
+
+On the x-axis, the chart displays cut, a variable from diamonds.
+On the y-axis, it displays count, but count is not a variable in diamonds!
+Where does count come from? Many graphs, like scatterplots, plot the
+raw values of your dataset. Other graphs, like bar charts, calculate
+new values to plot:  
+
+  - bar charts, histograms, and frequency polygons bin your data and then
+    plot bin counts, the number of points that fall in each bin  
+  - smoothers fit a model to your data and then plot predictions from the model  
+  - boxplots compute a robust summary of the distribution and then display
+    a specially formatted box  
+    
+The algorithm used to calculate new values for a graph is called a stat,
+short for statistical transformation. The figure below describes how this
+process works with geom_bar().  
+
+You can learn which stat a geom uses by inspecting the default value for
+the stat argument. For example, ?geom_bar shows that the default value for
+stat is “count”, which means that geom_bar() uses stat_count().  
+You can generally use geoms and stats interchangeably. For example, you
+can recreate the previous plot using stat_count() instead of geom_bar().
+This works because every geom has a default stat; and every stat has a
+default geom. This means that you can typically use geoms without worrying
+about the underlying statistical transformation.  
+
+```{r}
+# stat_count with default geom_bar
+ggplot(data = diamonds) +
+  stat_count(mapping = aes(x = cut))
+```
+
+There are three reasons you might need to use a stat explicitly:  
+
+  1. You might want to override the default stat. In the code below,
+     I change the stat of geom_bar() from count (the default) to identity.
+     This lets me map the height of the bars to the raw values of a y
+     variable  
+  2. You might want to override the default mapping from transformed
+     variables to aesthetics. For example, you might want to display a
+     bar chart of proportion, rather than count  
+  3. You might want to draw greater attention to the statistical
+     transformation in your code. For example, you might use
+     stat_summary(), which summarises the y values for each unique x
+     value, to draw attention to the summary that you’re computing  
+
+```{r}
+# changing count to proportions
+ggplot(data = diamonds) +
+    geom_bar(mapping = aes(x = cut, y = stat(prop), group = 1))
+
+# computing specific stats
+ggplot(data = diamonds) +
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.min = min,
+    fun.max = max,
+    fun = median
+  )
+```
+
+
+### Position Adjustments
+
+There’s one more piece of magic associated with bar charts. You can colour
+a bar chart using either the colour aesthetic, or, more usefully, fill.  
+
+```{r}
+# color by cut
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, colour = cut))
+
+# fill by cut
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = cut))
+```
+
+Note what happens if you map the fill aesthetic to another variable,
+like clarity: the bars are automatically stacked. Each colored rectangle
+represents a combination of cut and clarity.  
+
+```{r}
+# automatic stacked bars with fill by another variable (clarity)
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = clarity))
+```
+
+The stacking is performed automatically by the position adjustment
+specified by the position argument. If you don’t want a stacked bar
+chart, you can use one of three other options: "identity", "dodge" or
+"fill":  
+
+  - position = "identity" will place each object exactly where it falls
+    in the context of the graph. This is not very useful for bars, because
+    it overlaps them. To see that overlapping we either need to make the
+    bars slightly transparent by setting alpha to a small value, or
+    completely transparent by setting fill = NA  
+  - position = "fill" works like stacking, but makes each set of stacked
+    bars the same height. This makes it easier to compare proportions
+    across groups  
+  - position = "dodge" places overlapping objects directly beside
+    one another. This makes it easier to compare individual values  
+
+```{r}
+# position identity makes overlapping bars
+ggplot(data = diamonds, mapping = aes(x = cut, fill = clarity)) +
+  geom_bar(alpha = 1/5, position = "identity")
+ggplot(data = diamonds, mapping = aes(x = cut, colour = clarity)) +
+  geom_bar(fill = NA, position = "identity")
+
+# position fill creates proportional stacked bars
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "fill")
+
+# position dodge creates bars next to each other
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
+```
+
+There’s one other type of adjustment that’s not useful for bar charts,
+but it can be very useful for scatter plots.
+The values in scatter plots are usually rounded so the points appear on
+a grid and many points overlap each other. This problem is known as
+overplotting. This arrangement makes it hard to see where the mass of
+the data is. You can avoid this gridding by setting the position
+adjustment to “jitter”. position = "jitter" adds a small amount of
+random noise to each point. This spreads the points out because no two
+points are likely to receive the same amount of random noise.
+Adding randomness seems like a strange way to improve your plot, but while
+it makes your graph less accurate at small scales, it makes your graph more
+revealing at large scales. Because this is such a useful operation, ggplot2
+comes with a shorthand for geom_point(position = "jitter"): geom_jitter().  
+
+```{r}
+# scatterplot with overplotted points
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+# scatterplot with noise using position jitter or geom_jitter
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
+ggplot(data = mpg) +
+  geom_jitter(mapping = aes(x = displ, y = hwy))
+
+```
+
+
+### Coordinate Systems
+
+Coordinate systems are probably the most complicated part of ggplot2.
+The default coordinate system is the Cartesian coordinate system where
+the x and y positions act independently to determine the location of
+each point. There are a number of other coordinate systems that are
+occasionally helpful:  
+
+  - coord_flip() switches the x and y axes. This is useful (for example),
+    if you want horizontal boxplots. It’s also useful for long labels:
+    it’s hard to get them to fit without overlapping on the x-axis  
+  - coord_quickmap() sets the aspect ratio correctly for maps. This is very
+    important if you’re plotting spatial data with ggplot2  
+  - coord_polar() uses polar coordinates. Polar coordinates reveal an
+    interesting connection between a bar chart and a Coxcomb chart  
+
+```{r}
+# boxplot
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_boxplot()
+
+# boxplot with flipped x and y axes
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_boxplot() +
+  coord_flip()
+
+bar <- ggplot(data = diamonds) +
+  geom_bar(
+    mapping = aes(x = cut, fill = cut),
+    show.legend = FALSE,
+    width = 1
+  ) +
+  theme(aspect.ratio = 1) +
+  labs(x = NULL, y = NULL)
+
+# bar with flipped x and y axes
+bar + coord_flip()
+
+# bar with polar axes
+bar + coord_polar()
+```
+
+
+### Facets
+
+One way to add additional variables is with aesthetics. Another way,
+particularly useful for categorical variables, is to split your plot
+into facets, subplots that each display one subset of the data.
+To facet your plot by a single variable, use facet_wrap(). The first
+argument of facet_wrap() should be a formula, which you create with ~
+followed by a variable name (here “formula” is the name of a data
+R structure in R, not a synonym for “equation”). The variable that you
+pass to facet_wrap() should be discrete.  
+
+```{r}
+# scatterplot faceted by class
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_wrap(~ class, nrow = 2)
+```
+
+To facet your plot on the combination of two variables, add facet_grid()
+to your plot call. The first argument of facet_grid() is also a formula.
+This time the formula should contain two variable names separated by a ~.  
+
+```{r}
+# scatterplot faceted by drv (to rows) and cyl (to columns)
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ cyl)
+```
+
+If you prefer to not facet in the rows or columns dimension, use a .
+instead of a variable name, e.g. + facet_grid(. ~ cyl).  
+
+```{r}
+# scatterplot faceted by cyl (to rows)
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(cyl ~ .)
+
+# scatterplot faceted by cyl (to columns)
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(. ~ cyl)
+```
+
+
+### Other Useful Graphical Designs
+
+```{r}
+# Scale
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_jitter() +
+  geom_violin(mapping = aes(fill = drv), alpha = .5) +
+  geom_hline(
+    yintercept = mpg %>% group_by(drv) %>% summarise(means = mean(hwy)) %>% pull(means),
+    linetype = 2,
+    col = c("red", "green", "blue")
+  ) +
+  scale_fill_manual(values = c("red", "green", "blue"))
+
+# Labs
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_jitter() +
+  geom_violin(mapping = aes(fill = drv), alpha = .5) +
+  geom_hline(
+    yintercept = mpg %>% group_by(drv) %>% summarise(means = mean(hwy)) %>% pull(means),
+    linetype = 2,
+    col = c("red", "green", "blue")
+  ) +
+  scale_fill_manual(values = c("red", "green", "blue")) +
+  labs(
+    title = "Boxplots",
+    subtitle = "colored by drv",
+    caption = "Fig. 1",
+    x = "Classes",
+    y = "HMY",
+    fill = "DRV Types" legend title
+  )
+
+# Themes
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_jitter() +
+  geom_violin(mapping = aes(fill = drv), alpha = .5) +
+  geom_hline(
+    yintercept = mpg %>% group_by(drv) %>% summarise(means = mean(hwy)) %>% pull(means),
+    linetype = 2,
+    col = c("red", "green", "blue")
+  ) +
+  scale_fill_manual(values = c("red", "green", "blue")) +
+  labs(
+    title = "Boxplots",
+    subtitle = "colored by drv",
+    caption = "Fig. 1",
+    x = "Classes",
+    y = "HMY",
+    fill = "DRV Types" legend title
+  ) +
+  theme_dark() +
+  theme_bw() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  NULL
+```
+
+
+### The Grammar of Graphics Template
+
+```{r}
+ggplot(data = <DATA>) +
+  <GEOM_FUNCTION>(
+    mapping = aes(<MAPPINGS>),
+    stat = <STAT>,
+    position = <POSITION>
+  ) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>
+```
+
+Our new template takes seven parameters, the bracketed words that appear
+in the template. In practice, you rarely need to supply all seven
+parameters to make a graph because ggplot2 will provide useful defaults
+for everything except the data, the mappings, and the geom function.  
+
+The seven parameters in the template compose the grammar of graphics,
+a formal system for building plots. The grammar of graphics is based
+on the insight that you can uniquely describe any plot as a combination
+of a dataset, a geom, a set of mappings, a stat, a position adjustment,
+a coordinate system, and a faceting scheme.  
+
+
+## Ggplot2 Extensions
+
+Look at the extensions [website](https://exts.ggplot2.tidyverse.org/index.html).  
+
+### Ggiraph
+
+```{r}
+library(ggplot2)
+library(rvg)
+library(ggiraph)
+
+data <- mtcars
+data$carname <- row.names(data)
+
+gg_point <- data %>%
+  ggplot() +
+  geom_point_interactive(
+    aes(x = wt, y = qsec, color = disp, tooltip = carname, data_id = carname)
+  ) +
+  theme_minimal()
+
+girafe(ggobj = gg_point)
+```
+
+
+### Gganimate
+
+```{r}
+library(ggplot2)
+library(gganimate)
+
+```
+
+For example, suppose we wanted to create an animation similar to the Gapminder
+world animation, using Jenny Bryan's gapminder package for the data.  
+
+```{r}
+library(gapminder)
+gapminder
+
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  facet_wrap(~continent) +
+  Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  ease_aes('linear')
+```
+
+
+### Ggrepel
+
+```{r}
+library(ggplot2)
+library(ggrepel)
+
+data <- mtcars[1:8, ]
+
+data %>%
+  ggplot() +
+  geom_point(aes(wt, mpg), color = 'red') +
+  geom_text(aes(wt, mpg, label = rownames(data))) +
+  theme_classic(base_size = 16)
+
+set.seed(42)
+data %>%
+  ggplot() +
+  geom_point(aes(wt, mpg), color = 'red') +
+  geom_text_repel(aes(wt, mpg, label = rownames(data))) +
+  theme_classic(base_size = 16)
+```
+
+
+### Patchwork
+
+Patchwork allows to combine different ggplot2 objects.  
+
+```{r}
+library(patchwork)
+mpg
+p1 <- ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_boxplot() +
+  coord_flip()
+p2 <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth()
+
+p1 | p2 # patchwork sintax
+
+
+wrap_plots(p1, p2, guides = "collect") &
+  guides(colour = guide_legend(nrow = 1)) &
+  theme(legend.position = "top")
+
+p3 <- ggplot(data = mpg, mapping = aes(x = class, y = hwy)) +
+  geom_jitter() +
+  geom_violin(mapping = aes(fill = drv), alpha = .5) +
+  geom_hline(
+    yintercept = mpg %>% group_by(drv) %>% summarise(means = mean(hwy)) %>% pull(means),
+    linetype = 2,
+    col = c("red", "green", "blue")
+  ) +
+  scale_fill_manual(values = c("red", "green", "blue")) +
+  labs(
+    title = "Boxplots",
+    subtitle = "colored by drv",
+    caption = "Fig. 1",
+    x = "Classes",
+    y = "HMY",
+    fill = "DRV Types"
+  )
+
+(p1 | p2) / p3 # patchwork sintax
+```
+
+
+### Ggside
+
+```{r}
+library(ggside)
+
+mpg %>%
+  ggplot(aes(hwy, cty, color = class)) +
+  geom_point(size = 2, alpha = .3) +
+  geom_smooth(aes(color = NULL), se = TRUE) +
+  geom_xsidedensity(
+    aes(y = after_stat(density), fill = class),
+    alpha = .5, size = 1, position = "stack"
+  ) +
+  geom_ysidedensity(
+    aes(x = after_stat(density), fill = class),
+    alpha = .5, size = 1, position = "stack"
+  ) +
+  theme_minimal()
+
+mpg %>%
+  ggplot(aes(cty, hwy, color = class)) +
+  geom_point(size = 2, alpha = .3) +
+  geom_smooth(aes(color = NULL), se = TRUE) +
+  geom_xsideboxplot(alpha = .5, size = 1) +
+  facet_grid(cols = vars(cyl), scales = "free_x") +
+  theme_minimal()
+```
+
+
+### Ggdist
+
+```{r}
+library(ggdist)
+
+mpg %>%
+  filter(cyl %in% c(4, 6, 8)) %>%
+  ggplot(aes(factor(cyl), hwy, fill = factor(cyl))) +
+  stat_halfeye(adjust = .5, justification = -.2, .width = 0, point_colour = NA) +
+  geom_boxplot(width = .12, outlier.color = NA, alpha = .5) +
+  stat_dots(side = "left", justification = 1.1, binwidth = .25) +
+  coord_flip() +
+  theme_minimal()
+```
+
+
+### Grafify
+
+```{r}
+library(grafify)
+
+# scatter bars
+mpg %>% plot_scatterbar_sd(cyl, hwy)
+
+# scatter boxplots
+mpg %>% plot_scatterbox(cyl, hwy, jitter = 0.2, alpha = 0.5)
+
+# scatter violin
+mpg %>% plot_dotviolin(cyl, hwy, dotsize = 1, ColPal = "bright")
+
+# before & after
+mpg %>%
+  group_by(model, year) %>%
+  summarise(mean_hwy = mean(hwy)) %>%
+  ungroup() %>%
+  plot_befafter_colors(year, mean_hwy, model)
+```
+
+
+## Plotly
+
+Plotly [website](https://plotly.com/graphing-libraries/) & 
+plotly with R [website](https://plotly.com/r/).  
+
+Plotly is a library that offers interactive charts and maps for Python,
+R, Julia, Javascript, ggplot2, F#, MATLAB®, and Dash.  
+
+```{r}
+install.packages("plotly")
+library(plotly)
+```
+
+Plotly is a huge library, like ggplot2. I want to focus here on how to
+convert ggplot2 ogbjects into plotly interactive charts.
+With ggplotly() by Plotly, you can convert your ggplot2 figures into
+interactive ones powered by plotly.js, ready for embedding into applications.  
+
+```{r}
+gp <- mpg %>%
+  ggplot(mapping = aes(x = displ, y = hwy, col = cyl)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ year, nrow = 2, scales = "free_y") +
+  labs(
+    title = "Linear Regression Model",
+    subtitle = "1999 - 2008",
+    caption = "Fig. 1 The linear regression relationship between hmy and displ over years.",
+    x = "Engine Displacement",
+    y = "Highway Miles per Gallon",
+    col = "Cylinders"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# ggplot2 chart
+gp
+```
+
+```{r}
+# plotly chart
+# not exactly the same because not all ggplot2 functionalities have a plotly counterpart
+ggplotly(gp)
+```
+
+
+
+# Functional Programming
+
+## Purrr
+
+purrr enhances R’s functional programming (FP) toolkit by providing a 
+complete and consistent set of tools for working with functions and vectors.
+If you’ve never heard of FP before, the best place to start is the family 
+of map() functions which allow you to replace many for loops with code that 
+is both more succinct and easier to read.  
+
+```{r}
+library(purrr)
+```
+
+
+## For Loop vs Functionals
+
+For loops are not as important in R as they are in other languages because 
+R is a functional programming language. This means that it’s possible to
+wrap up for loops in a function, and call that function instead of using 
+the for loop directly.  
+
+To see why this is important, consider this simple data frame:  
+  
+```{r}
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+df
+```
+ 
+Imagine you want to compute the mean of every column. You could do that 
+with a for loop:  
+
+```{r}
+output <- vector("double", length(df))
+output
+for (i in seq_along(df)) {
+  output[[i]] <- mean(df[[i]])
+}
+output
+```
+
+You realise that you’re going to want to compute the means of every column 
+pretty frequently, so you extract it out into a function:  
+    
+```{r}
+
+col_mean <- function(df) {
+  output <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[i] <- mean(df[[i]])
+  }
+  return(output)
+}
+col_mean(df)
+```
+
+But then you think it’d also be helpful to be able to compute the median, 
+and the standard deviation, so you copy and paste your col_mean() function 
+and replace the mean() with median() and sd():  
+    
+```{r}
+col_median <- function(df) {
+  output <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[i] <- median(df[[i]])
+  }
+  return(output)
+}
+col_median(df)
+
+col_sd <- function(df) {
+  output <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[i] <- sd(df[[i]])
+  }
+  return(output)
+}
+col_sd(df)
+```
+    
+You’ve copied-and-pasted this code twice, so it’s time to think about how 
+to generalise it. Notice that most of this code is for-loop boilerplate and 
+it’s hard to see the one thing (mean(), median(), sd()) that is different 
+between the functions.  
+We can generalise col_mean(), col_median() and col_sd() by adding an 
+argument that supplies the function to apply to each column:  
+  
+```{r}
+col_summary <- function(df, fun) {
+  output <- vector("double", length(df))
+  for (i in seq_along(df)) {
+    output[i] <- fun(df[[i]])
+  }
+  return(output)
+}
+
+col_summary(df, mean)
+col_summary(df, median)
+col_summary(df, sd)
+
+```
+  
+The idea of passing a function to another function is an extremely powerful 
+idea, and it’s one of the behaviours that makes R a functional programming 
+language. It might take you a while to wrap your head around the idea, 
+but it’s worth the investment. In the rest of the chapter, you’ll learn 
+about and use the purrr package, which provides functions that eliminate 
+the need for many common for loops. The apply family of functions in base 
+R (apply(), lapply(), tapply(), etc) solve a similar problem, but purrr 
+is more consistent and thus is easier to learn.  
+
+The goal of using purrr functions instead of for loops is to allow you to 
+break common list manipulation challenges into independent pieces:  
+   
+How can you solve the problem for a single element of the list? Once 
+you’ve solved that problem, purrr takes care of generalising your solution 
+to every element in the list.  
+ 
+If you’re solving a complex problem, how can you break it down into 
+bite-sized pieces that allow you to advance one small step towards a 
+solution? With purrr, you get lots of small pieces that you can compose 
+together with the pipe.  
+ 
+This structure makes it easier to solve new problems. It also makes it 
+easier to understand your solutions to old problems when you re-read your 
+old code.  
+
+
+## The Map Functions
+
+The pattern of looping over a vector, doing something to each element and 
+saving the results is so common that the purrr package provides a family 
+of functions to do it for you. There is one function for each type of output:    
+
+  - map() makes a list  
+  - map_lgl() makes a logical vector  
+  - map_int() makes an integer vector  
+  - map_dbl() makes a double vector  
+  - map_chr() makes a character vector  
+  
+Each function takes a vector as input, applies a function to each piece, 
+and then returns a new vector that’s the same length (and has the same names) 
+as the input. The type of the vector is determined by the suffix to the 
+map function.  
+
+Once you master these functions, you’ll find it takes much less time to 
+solve iteration problems. But you should never feel bad about using a for 
+loop instead of a map function. The map functions are a step up a tower of 
+abstraction, and it can take a long time to get your head around how they 
+work. The important thing is that you solve the problem that you’re working 
+on, not write the most concise and elegant code (although that’s definitely 
+something you want to strive towards!).  
+ 
+Some people will tell you to avoid for loops because they are slow. 
+They’re wrong! (Well at least they’re rather out of date, as for loops 
+haven’t been slow for many years.) The chief benefits of using functions 
+like map() is not speed, but clarity: they make your code easier to write 
+and to read.  
+ 
+We can use these functions to perform the same computations as the last 
+for loop. Those summary functions returned doubles, so we need to use 
+map_dbl():  
+
+```{r}
+map_dbl(df, mean)
+map_dbl(df, median)
+map_dbl(df, sd)
+```
+
+Compared to using a for loop, focus is on the operation being performed 
+(i.e. mean(), median(), sd()), not the bookkeeping required to loop over 
+every element and store the output. This is even more apparent if we use 
+the pipe:  
+
+```{r}
+# maps can be used in pipe chains easily
+df %>% map_dbl(mean)
+df %>% map_dbl(median)
+df %>% map_dbl(sd)
+```
+
+There are a few differences between map_*() and our col_summary():  
+
+  - all purrr functions are implemented in C. This makes them a little 
+    faster at the expense of readability  
+  - the second argument, .f, the function to apply, can be a formula, 
+    a character vector, or an integer vector  
+  - map_*() uses … ([dot dot dot]) to pass along additional arguments to 
+    .f each time it’s called  
+  - map functions also preserve names  
+  
+```{r}
+# used with lambda (on-the-fly) functions
+map_dbl(df, ~ mean(., trim = .5))
+
+# used ... to specify additional arguments of .f
+map_dbl(df, mean, trim = .5)
+```
+
+
+## The Power of Mapping
+
+Imagine you want to fit a linear model to each group in a dataset. 
+The following toy example splits up the mpg dataset into seven pieces 
+(one for each value of class) and fits the same linear model to each piece.   
+
+```{r}
+# with base R lambda function syntax
+models <- mpg %>% 
+  split(.$class) %>% 
+  map(function(df) lm(hwy ~ displ + cyl, data = df))
+models
+```
+
+The syntax for creating an anonymous function in R is quite verbose so 
+purrr provides a convenient shortcut: a one-sided formula.  
+
+```{r}
+# with purrr lambda function syntax
+models <- mpg %>% 
+  split(.$class) %>% 
+  map(~ lm(hwy ~ displ + cyl, data = .))
+models
+
+```
+
+Here I’ve used . as a pronoun: it refers to the current list element 
+(in the same way that i referred to the current index in the for loop).  
+
+When you’re looking at many models, you might want to extract a summary 
+statistic like the R^2. To do that we need to first run summary() and 
+then extract the component called r.squared. We could do that using the 
+shorthand for anonymous functions.  
+  
+```{r}
+model_one_summary <- summary(models[[1]])
+typeof(model_one_summary)
+View(model_one_summary)
+model_one_summary$r.squared
+model_one_summary[["r.squared"]]
+```
+
+```{r}
+# extract summary for each model
+summaries_mods <- models %>%
+  map(summary)
+
+# extract r.squared from each summary of each model
+models %>%
+  map(summary) %>%
+  map_dbl( ~ .$r.squared)
+```
+
+But extracting named components is a common operation, so purrr provides 
+an even shorter shortcut: you can use a string.  
+
+```{r}
+models %>% 
+  map(summary) %>% 
+  map_dbl("r.squared")
+```
+
+You can also use an integer to select elements by position.
+
+```{r}
+models %>% 
+  map(summary) %>% 
+  map_dbl(8)
+```
+
+
+## Mapping Over Multiple Arguments
+
+So far we’ve mapped along a single input. But often you have multiple 
+related inputs that you need iterate along in parallel. That’s the job of 
+the map2() and pmap() functions. 
+For example, imagine you want to simulate some random normals with 
+different means. You know how to do that with map().  
+
+```{r}
+mu <- list(5, 10, -3)
+map(mu, rnorm, n = 5)
+```
+
+What if you also want to vary the standard deviation? We could use 
+map2() which iterates over two vectors in parallel.  
+
+```{r}
+sigma <- list(1, 5, 10)  
+map2(mu, sigma, rnorm, n = 5)
+```
+
+You could also imagine map3(), map4(), map5(), map6() etc, but that 
+would get tedious quickly. Instead, purrr provides pmap() which takes 
+a list of arguments.   
+
+For instance, you might use that if you wanted to vary the mean, 
+standard deviation, and number of samples.  
+  
+```{r}
+n <- list(1, 3, 5)
+args <- list(n, mu, sigma)
+pmap(args, rnorm)
+```
+  
+If you don’t name the list’s elements, pmap() will use positional 
+matching when calling the function. That’s a little fragile, and makes 
+the code harder to read, so it’s better to name the arguments.  
+
+```{r}
+args_named <- list(mean = mu, sd = sigma, n = n)
+pmap(args_named, rnorm)
+```
+
+Since the arguments are all the same length, it makes also sense to store 
+them in a data frame.  
+  
+```{r}
+params <- tibble(
+  mean = c(5, 10, -3), 
+  sd = c(1, 5, 10), 
+  n = c(1, 3, 5)
+) 
+pmap(params, rnorm)
+```
+  
+
+## Invoking Different Functions
+
+There’s one more step up in complexity - as well as varying the arguments 
+to the function you might also vary the function itself.  
+  
+```{r}
+f <- c("runif", "rnorm", "rpois")
+f
+param <- list(
+  list(min = -1, max = 1), 
+  list(sd = 5), 
+  list(lambda = 10)
+)
+param
+```
+  
+To handle this case, you can use invoke_map():  
+
+```{r}
+invoke_map(f, param, n = 5)
+```
+
+The first argument is a list of functions or character vector of function 
+names. The second argument is a list of lists giving the arguments that 
+vary for each function. The subsequent arguments are passed on to every 
+function.  
+

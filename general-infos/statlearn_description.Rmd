@@ -40,9 +40,10 @@ are presented through hands-on labs with **R**.
 * Tidymodels Features Engineering (Recipes)  
 * Tidymodels Modelling (Engines & Workflows)  
 * Tidymodels Hyperparameter Tuning (Tune)  
-* Neural Networks with Keras  
-* Automatic Machine Learning with H2O  
-* Explainable AI with DALEX & LIME  
+* Ensemble Learning (Stacks)  
+* Automatic Machine Learning (H2O)  
+* Deep Neural Networks (Keras)  
+* Explainable AI (DALEX & LIME)  
 
 Methods:  
 - Linear Regression, Logistic Regression, Ridge, LASSO, Elastic Net, MARS  

@@ -26,14 +26,11 @@ presented through hands-on labs with **R**.
 -   [General
     Information](https://marcozanotti.github.io/statlearning-course/general-infos/statlearn_description.html)  
 -   [Syllabus](https://marcozanotti.github.io/statlearning-course/general-infos/statlearn_syllabus.html)  
--   [Lectures](https://github.com/marcozanotti/statlearning-course/tree/master/R)
+-   [Lectures](https://github.com/marcozanotti/statlearning-course/tree/master/R)  
+-   [Requirements -
+    Tidyverse](https://marcozanotti.github.io/statlearning-course/R/statlearn_lecture0_tidyverse.html)
 
 *Suggested materials*
-
-Git & GitHub:
-
--   [Pro Git](https://git-scm.com/book/en/v2)  
--   [Happy Git with R](https://happygitwithr.com/index.html)
 
 R Programming:
 
@@ -43,12 +40,11 @@ R Programming:
 -   [R Packages](https://r-pkgs.org/index.html)  
 -   [Advanced R](https://adv-r.hadley.nz/)
 
-RMarkdown & Shiny:
-
--   [RMarkdown: The Definitive
-    Guide](https://bookdown.org/yihui/rmarkdown/)  
--   [Mastering Shiny](https://mastering-shiny.org/)  
--   [Shiny Tutorials](https://shiny.rstudio.com/tutorial/)
+Statistics & ML:  
+- [Feature Engineering and
+Selection](https://www.tidymodels.org/books/fes/)  
+- [Tidy Modelling with R](https://www.tmwr.org/)  
+- [Supervised Machine Learning for Text Analysis in R]()
 
 Everything with R:
 
