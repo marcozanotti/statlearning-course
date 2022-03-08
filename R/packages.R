@@ -2,12 +2,15 @@
 pkgs <- c(
   "tidyverse", 
   "lubridate", 
+  "timeDate",
   "readxl",
+  "skimr",
+  "DataExplorer",
   "tidymodels",
-  "timetk",
-  "modeltime",
-  "performance",
-  "DALEX",
-  "modelStudio"
+  "broom.mixed",
+  "rstanarm",
+  "dotwhisker",
+  "nycflights13",
+  "modeldata"
 )
 install_and_load(pkgs)
