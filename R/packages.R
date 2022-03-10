@@ -9,6 +9,8 @@ pkgs <- c(
   "tidymodels",
   "broom.mixed",
   "rstanarm",
+  "vip",
+  "rpart.plot",
   "dotwhisker",
   "nycflights13",
   "modeldata"
