@@ -29,7 +29,9 @@ develop their software skills.
 The **Statistical Learning** part of the course aims at teaching a
 methodological and practical overview to statistical learning methods. 
 The emphasis is on the applications and state-of-the-art techniques 
-are presented through hands-on labs with **R**.  
+are presented through hands-on labs with **R**. The focus will be on
+business-oriented libraries allowing to integrate statistical models 
+into production-ready tools.     
 
 * 10 hours: practical lectures on the main contents  
 
