@@ -1,6 +1,6 @@
 # Statistical Learning ----
 
-# Lecture 4: Hyperparameter Tuning ----------------------------------------
+# Lecture 6: Hyperparameter Tuning ----------------------------------------
 # 2021/2022
 # Marco Zanotti
 

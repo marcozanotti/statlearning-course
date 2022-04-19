@@ -6,6 +6,7 @@ pkgs <- c(
   "readxl",
   "skimr",
   "DataExplorer",
+  "plotly",
   "tidymodels",
   "broom.mixed",
   "rstanarm",
@@ -13,6 +14,10 @@ pkgs <- c(
   "rpart.plot",
   "dotwhisker",
   "nycflights13",
-  "modeldata"
+  "modeldata", 
+  "treesnip",
+  "rules",
+  "Cubist",
+  "baguette"
 )
 install_and_load(pkgs)
