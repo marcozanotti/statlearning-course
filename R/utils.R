@@ -184,15 +184,28 @@ prepare_house_prices <- function(data, target) {
 
 
 # Function to evaluate models
-evaluate_model <- function(prediction_results, mode) {
+evaluate_model <- function(prediction_results, mode, type) {
 	
 	if (mode == "regression") {
 		res <- prediction_results %>% 
 			metrics(truth = Actual, estimate = Pred) %>% 
 			select(.metric, .estimate) %>% 
-			set_names("Metric", "Estimate")
+			set_names("Metric", "Estimate") %>% 
+			add_column("Type" = type)
 	} else {
-		
+		res_confmat <- prediction_results %>%
+			conf_mat(truth = Actual, estimate = Pred)
+		res_metrics <- bind_rows(
+			prediction_results %>% metrics(truth = Actual, estimate = Pred),
+			prediction_results %>% roc_auc(truth = Actual, estimate = Prob_Low)
+		) %>% 
+			select(.metric, .estimate) %>% 
+			set_names("Metric", "Estimate") %>% 
+			add_column("Type" = type)
+		res_roc <- prediction_results %>%
+			roc_curve(truth = Actual, Prob_Low) %>% 
+			add_column("Type" = type)
+		res <- list("confusion" = res_confmat$table, "metrics" = res_metrics, "roc" = res_roc)
 	}
 	
 	return(res)
@@ -214,11 +227,16 @@ plot_model <- function(prediction_results, mode) {
 			scale_color_manual(values = c("black", "red")) +
 			labs(x = "", y = "", col = "") +
 			theme_minimal()
-		res <- plotly::ggplotly(p)
 	} else {
-		
+		p <- prediction_results$roc %>%
+			ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+			geom_path() +
+			geom_abline(lty = 3) +
+			coord_equal() + 
+			theme_minimal() 
 	}
 	
+	res <- plotly::ggplotly(p)
 	return(res)
 	
 }
@@ -239,21 +257,32 @@ calibrate_evaluate_plot <- function(
 		new_data <- training(splits)
 	}
 	
-	pred_res <- model_fit %>% 
-		augment(new_data) %>%
-		select(y, .pred) %>% 
-		set_names(c("Actual", "Pred")) %>% 
-		# bind_cols(
-		# 	model_fit %>% 
-		# 		predict(new_data, type = "conf_int") %>%
-		# 		set_names(c("Lower", "Upper")) 
-		# ) %>% 
-		add_column("Type" = type) 
+	if (mode == "regression") {
+		pred_res <- model_fit %>% 
+			augment(new_data) %>%
+			select(all_of(y), .pred) %>% 
+			set_names(c("Actual", "Pred")) %>% 
+			# bind_cols(
+			# 	model_fit %>% 
+			# 		predict(new_data, type = "conf_int") %>%
+			# 		set_names(c("Lower", "Upper")) 
+			# ) %>% 
+			add_column("Type" = type)
+	} else {
+		pred_res <- model_fit %>% 
+			augment(new_data) %>%
+			select(all_of(y), contains(".pred")) %>% 
+			set_names(c("Actual", "Pred", "Prob_Low", "Prob_High")) %>% 
+			add_column("Type" = type)
+	}
 	
-	pred_met <- pred_res %>% evaluate_model(mode) %>%	add_column("Type" = type)
+	pred_met <- pred_res %>% evaluate_model(mode, type)
 	
-	
-	pred_plot <- pred_res %>% plot_model(mode)
+	if (mode == "regression") {
+		pred_plot <- pred_res %>% plot_model(mode)
+	} else {
+		pred_plot <- pred_met %>% plot_model(mode)
+	}
 	
 	if (print) {
 		print(pred_met)
@@ -278,11 +307,19 @@ collect_results <- function(model_fit, y, mode, method) {
 		~ calibrate_evaluate_plot(model_fit, y, mode, type = ., FALSE)
 	)
 	
-	res <- list(
-		"pred_results" = map(res, "pred_results") %>% bind_rows() %>% add_column("Method" = method, .before = 1),
-		"pred_metrics" = map(res, "pred_metrics") %>% bind_rows() %>% add_column("Method" = method, .before = 1)
-	)
-	
+	if (mode == "regression") {
+		res <- list(
+			"pred_results" = map(res, "pred_results") %>% bind_rows() %>% add_column("Method" = method, .before = 1),
+			"pred_metrics" = map(res, "pred_metrics") %>% bind_rows() %>% add_column("Method" = method, .before = 1)
+		)
+	} else {
+		res <- list(
+			"pred_results" = map(res, "pred_results") %>% bind_rows() %>% add_column("Method" = method, .before = 1),
+			"pred_metrics" = map(res, "pred_metrics") %>% map("metrics") %>% bind_rows() %>% add_column("Method" = method, .before = 1),
+			"pred_roc" = map(res, "pred_metrics") %>% map("roc") %>% bind_rows() %>% add_column("Method" = method, .before = 1)
+		)
+	}
+
 	return(res)
 	
 }

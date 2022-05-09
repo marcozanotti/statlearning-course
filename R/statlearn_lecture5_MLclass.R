@@ -1,19 +1,19 @@
 # Statistical Learning ----
 
-# Lecture 4: Regression with ML Models ------------------------------------
+# Lecture 6: Classification with ML Models --------------------------------
 # 2021/2022
 # Marco Zanotti
 
 # Goals:
-# - Linear Regression
+# - Naive Bayes
+# - Logistic Regression
 # - Elastic Net
-# - MARS
 # - SVM
 # - KNN
+# - Decision Tree
 # - Bagging
 # - Random Forest
 # - XGBoost, Light GBM
-# - Cubist
 # - Neural Networks
 
 
@@ -25,17 +25,13 @@ source("R/packages.R")
 
 # packages treesnip and catboost have to be installed from dev versions
 # remotes::install_github("curso-r/treesnip")
-# devtools::install_url(
-# 	"https://github.com/catboost/catboost/releases/download/v1.0.0/catboost-R-Linux-1.0.0.tgz",
-# 	INSTALL_opts = c("--no-multiarch", "--no-test-load")
-# )
 
 
 
 # Data --------------------------------------------------------------------
 
 artifacts_list <- read_rds("artifacts/artifacts_list.rds")
-data <- artifacts_list$reg_data
+data <- artifacts_list$class_data
 
 # * Train / Test Sets -----------------------------------------------------
 
@@ -44,68 +40,89 @@ splits <- initial_split(data, prop = .8)
 
 # * Recipes ---------------------------------------------------------------
 
-rcp_spec <- recipe(SalePrice ~ ., data = training(splits)) %>% 
+rcp_spec <- recipe(Value ~ ., data = training(splits)) %>% 
 	step_dummy(all_nominal(), -all_outcomes())
 rcp_spec %>% prep() %>% juice() %>% glimpse()
 
 
 
-# LINEAR REGRESSION -------------------------------------------------------
+# NAIVE BAYES -------------------------------------------------------------
 
-?linear_reg()
-# Baseline model for regression ML
+?naive_Bayes()
+# - Strengths: simple and efficient algorithm
+# - Weaknesses: usually too simple
 
 # * Engines ---------------------------------------------------------------
 
-model_spec_lm <- linear_reg() %>%
-	set_engine("lm")
+model_spec_nb <- naive_Bayes() %>%
+	set_engine("klaR")
 
 # * Workflows -------------------------------------------------------------
 
-wrkfl_fit_lm <- workflow() %>%
-	add_model(model_spec_lm) %>%
+wrkfl_fit_nb <- workflow() %>%
+	add_model(model_spec_nb) %>%
 	add_recipe(rcp_spec) %>%
 	fit(training(splits))
 
 # * Calibration, Evaluation & Plotting ------------------------------------
 
-wrkfl_fit_lm %>% extract_fit_parsnip() %>% tidy()
+wrkfl_fit_nb %>% 
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
-wrkfl_fit_lm %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "training")
 
-wrkfl_fit_lm %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+
+# LOGISTIC REGRESSION -------------------------------------------------------
+
+?logistic_reg()
+# - Strengths: easy to use and to interpret
+# - Weaknesses: not so good with non-linearities
+
+# * Engines ---------------------------------------------------------------
+
+model_spec_logit <- logistic_reg() %>%
+	set_engine("glm")
+
+# * Workflows -------------------------------------------------------------
+
+wrkfl_fit_logit <- workflow() %>%
+	add_model(model_spec_logit) %>%
+	add_recipe(rcp_spec) %>%
+	fit(training(splits))
+
+# * Calibration, Evaluation & Plotting ------------------------------------
+
+wrkfl_fit_logit %>% 
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
 # ELASTIC NET -------------------------------------------------------------
 
-?linear_reg()
+?logistic_reg()
 # Strengths: Very good for feature selection & collinearity
 # Weaknesses: Not as good for complex patterns (i.e. non-linearities)
 
 # * Engines ---------------------------------------------------------------
 
 # RIDGE
-model_spec_ridge <- linear_reg(
-	mode = "regression",
+model_spec_ridge <- logistic_reg(
+	mode = "classification",
 	penalty = 0.01,
 	mixture = 0
 ) %>%
 	set_engine("glmnet")
 
 # LASSO
-model_spec_lasso <- linear_reg(
-	mode = "regression",
+model_spec_lasso <- logistic_reg(
+	mode = "classification",
 	penalty = 0.01,
 	mixture = 1
 ) %>%
 	set_engine("glmnet")
 
 # MIXED
-model_spec_elanet <- linear_reg(
-	mode = "regression",
+model_spec_elanet <- logistic_reg(
+	mode = "classification",
 	penalty = 0.01,
 	mixture = 0.5
 ) %>%
@@ -134,45 +151,13 @@ wrkfl_fit_elanet <- workflow() %>%
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_ridge %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 wrkfl_fit_lasso %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 wrkfl_fit_elanet %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
-
-
-
-# MARS --------------------------------------------------------------------
-
-# Multiple Adaptive Regression Splines
-?mars()
-# Strengths: Good algorithm for modeling linearities
-# Weaknesses:
-#  - Not good for complex patterns (i.e. non-linearities)
-#  - Don't combine with splines! MARS makes splines. 
-
-# * Engines ---------------------------------------------------------------
-
-model_spec_mars <- mars(
-	mode = "regression",
-	prod_degree = 1, 
-	prune_method = "backward"
-) %>%
-	set_engine("earth", endspan = 100)
-
-# * Workflows -------------------------------------------------------------
-
-wrkfl_fit_mars <- workflow() %>%
-	add_model(model_spec_mars) %>%
-	add_recipe(rcp_spec) %>%
-	fit(training(splits))
-
-# * Calibration, Evaluation & Plotting ------------------------------------
-
-wrkfl_fit_mars %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -189,7 +174,7 @@ wrkfl_fit_mars %>%
 
 # SVM Linear
 model_spec_svm_linear <- svm_linear(
-	mode = "regression",
+	mode = "classification",
 	cost = 10,
 	margin = 0.1
 ) %>%
@@ -197,7 +182,7 @@ model_spec_svm_linear <- svm_linear(
 
 # SVM Polynomial
 model_spec_svm_poly <- svm_poly(
-	mode = "regression",
+	mode = "classification",
 	cost = 10,
 	degree = 2,
 	scale_factor = 1,
@@ -207,7 +192,7 @@ model_spec_svm_poly <- svm_poly(
 
 # SVM Radial
 model_spec_svm_rbf <- svm_rbf(
-	mode = "regression",
+	mode = "classification",
 	cost = 1,
 	rbf_sigma = 0.01,
 	margin = 0.1
@@ -240,13 +225,13 @@ wrkfl_fit_svm_rbf <- workflow() %>%
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_svm_linear %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 wrkfl_fit_svm_poly %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 wrkfl_fit_svm_rbf %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -257,29 +242,10 @@ wrkfl_fit_svm_rbf %>%
 # Strengths: Uses neighboring points to estimate
 # Weaknesses: Cannot predict beyond the maximum/minimum target
 
-# Trend Issue Example
-# sample_data_tbl <- tibble(
-#   date = timetk::tk_make_timeseries("2021", by = "quarter", length_out = 20),
-#   value = 1:20
-# )
-# sample_data_tbl %>% timetk::plot_time_series(date, value, .smooth = FALSE)
-# model_fit_knn <- nearest_neighbor(mode = "regression") %>%
-#   set_engine("kknn") %>%
-#   fit(value ~ as.numeric(date), sample_data_tbl)
-# modeltime::modeltime_table(model_fit_knn) %>%
-#   modeltime::modeltime_forecast(
-#     new_data = bind_rows(
-#       sample_data_tbl,
-#       timetk::future_frame(sample_data_tbl, .length_out = "2 years")
-#     ),
-#     actual_data = sample_data_tbl
-#   ) %>%
-#   modeltime::plot_modeltime_forecast()
-
 # * Engines ---------------------------------------------------------------
 
 model_spec_knn <- nearest_neighbor(
-	mode = "regression",
+	mode = "classification",
 	neighbors = 50,
 	dist_power = 10,
 	weight_func = "optimal"
@@ -297,7 +263,46 @@ wrkfl_fit_knn <- workflow() %>%
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_knn %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
+
+
+
+# DECISION TREE -----------------------------------------------------------
+
+?decision_tree()
+# - Strengths: Easy and interpretable
+# - Weaknesses: Usually poor performance
+
+# * Engines ---------------------------------------------------------------
+
+model_spec_tree <- decision_tree(
+	mode = "classification",
+	cost_complexity = 0,
+	tree_depth = 10,
+	min_n = 2
+) %>%
+	set_engine("rpart") 
+
+# * Workflows -------------------------------------------------------------
+
+set.seed(123)
+wrkfl_fit_tree <- workflow() %>%
+	add_model(model_spec_tree) %>%
+	add_recipe(rcp_spec) %>%
+	fit(training(splits))
+
+wrkfl_fit_tree %>%
+	extract_fit_engine() %>%
+	rpart.plot::rpart.plot(roundint = FALSE)
+
+wrkfl_fit_tree %>% 
+	extract_fit_parsnip() %>% 
+	vip::vip()
+
+# * Calibration, Evaluation & Plotting ------------------------------------
+
+wrkfl_fit_tree %>% 
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -310,7 +315,7 @@ wrkfl_fit_knn %>%
 # * Engines ---------------------------------------------------------------
 
 model_spec_bag <- bag_tree(
-	mode = "regression",
+	mode = "classification",
 	cost_complexity = 0,
 	tree_depth = 10,
 	min_n = 2
@@ -328,7 +333,7 @@ wrkfl_fit_bag <- workflow() %>%
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_bag %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -341,13 +346,13 @@ wrkfl_fit_bag %>%
 # * Engines ---------------------------------------------------------------
 
 model_spec_rf <- rand_forest(
-	mode = "regression",
+	mode = "classification",
 	mtry = 25,
 	trees = 1000,
 	min_n = 25
 ) %>%
 	# set_engine("randomForest")
-  set_engine("ranger") # faster implementation
+	set_engine("ranger") # faster implementation
 
 # * Workflows -------------------------------------------------------------
 
@@ -360,7 +365,7 @@ wrkfl_fit_rf <- workflow() %>%
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_rf %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -383,7 +388,7 @@ wrkfl_fit_rf %>%
 
 # XGBOOST
 model_spec_xgb <- boost_tree(
-	mode = "regression",
+	mode = "classification",
 	mtry = 25,
 	trees = 1000,
 	min_n = 2,
@@ -394,14 +399,9 @@ model_spec_xgb <- boost_tree(
 	set_engine("xgboost")
 
 # LIGHT GBM
-model_spec_lightgbm <- boost_tree(mode = "regression") %>%
+model_spec_lightgbm <- boost_tree(mode = "classification") %>%
 	set_engine("lightgbm")
 # objective = "reg:tweedie"
-
-# CAT BOOST
-# model_spec_catboost <- boost_tree(mode = "regression") %>%
-# 	set_engine("catboost")
-# loss_function = "Tweedie:variance_power=1.5"
 
 # * Workflows -------------------------------------------------------------
 
@@ -430,64 +430,13 @@ wrkfl_fit_lightgbm %>%
 	lightgbm::lgb.importance() %>%
 	lightgbm::lgb.plot.importance()
 
-# CAT BOOST
-# set.seed(123)
-# wrkfl_fit_catboost <- workflow() %>%
-# 	add_model(model_spec_catboost) %>%
-# 	add_recipe(rcp_spec) %>%
-# 	fit(training(splits))
-# 
-# wrkfl_fit_catboost %>%
-# 	parsnip::extract_fit_engine() %>%
-# 	catboost::catboost.get_feature_importance() %>%
-# 	as_tibble(rownames = "feature") %>%
-# 	rename(value = V1) %>%
-# 	arrange(-value) %>%
-# 	mutate(feature = as_factor(feature) %>% fct_rev()) %>%
-# 	dplyr::slice(1:10) %>%
-# 	ggplot(aes(value, feature)) +
-# 	geom_col()
-
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_xgb %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 wrkfl_fit_lightgbm %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
-
-wrkfl_fit_catboost %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
-
-
-
-# CUBIST ------------------------------------------------------------------
-
-?cubist_rules()
-# Like XGBoost, but the terminal (final) nodes are fit using linear regression
-# Strengths: can predict beyond maximum
-
-# * Engines ---------------------------------------------------------------
-
-model_spec_cubist <- cubist_rules(
-	committees = 50,
-	neighbors = 7,
-	max_rules = 100
-) %>%
-	set_engine("Cubist")
-
-# * Workflows -------------------------------------------------------------
-
-set.seed(123)
-wrkfl_fit_cubist <- workflow() %>%
-	add_model(model_spec_cubist) %>%
-	add_recipe(rcp_spec) %>%
-	fit(training(splits))
-
-# * Calibration, Evaluation & Plotting ------------------------------------
-
-wrkfl_fit_cubist %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -496,13 +445,13 @@ wrkfl_fit_cubist %>%
 ?mlp()
 # - Single Layer / Multi Layer Perceptron Network
 # - Simple network 
-# - Like linear regression with non-linear functions
+# - Like linear classification with non-linear functions
 # - Can improve learning by adding more hidden units, epochs, etc
 
 # * Engines ---------------------------------------------------------------
 
 model_spec_nnet <- mlp(
-	mode = "regression",
+	mode = "classification",
 	hidden_units = 10,
 	penalty = 1,
 	epochs = 100
@@ -520,7 +469,7 @@ wrkfl_fit_nnet <- workflow() %>%
 # * Calibration, Evaluation & Plotting ------------------------------------
 
 wrkfl_fit_nnet %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+	calibrate_evaluate_plot(y = "Value", mode = "classification", type = "testing")
 
 
 
@@ -529,20 +478,22 @@ wrkfl_fit_nnet %>%
 # * Comparison ------------------------------------------------------------
 
 wrkfl_fit_list <- list(
-	# LM
-	wrkfl_fit_lm,
+	# NAIVE BAYES
+	wrkfl_fit_nb,
+	# LOGISTIC REGRESSION 
+	wrkfl_fit_logit,
 	# ELASTIC NET
 	wrkfl_fit_ridge,
 	wrkfl_fit_lasso,
 	wrkfl_fit_elanet,
-	# MARS
-	wrkfl_fit_mars,
 	# SVM
 	wrkfl_fit_svm_linear,
 	wrkfl_fit_svm_poly,
 	wrkfl_fit_svm_rbf,
 	# KNN
 	wrkfl_fit_knn,
+	# DECISION TREE
+	wrkfl_fit_tree,
 	# BAGGING
 	wrkfl_fit_bag,
 	# RANDOM FOREST
@@ -550,29 +501,25 @@ wrkfl_fit_list <- list(
 	# BOOSTING
 	wrkfl_fit_xgb,
 	wrkfl_fit_lightgbm,
-	#wrkfl_fit_catboost,
-	# CUBIST
-	wrkfl_fit_cubist,
 	# NEURAL NETWORK
 	wrkfl_fit_nnet
 )
 
 methods_list <- list(
-	"LM", 
+	"NAIVE",
+	"LOGIT",
 	"RIDGE", "LASSO", "ELASTIC NET",
-	"MARS",
 	"SVM LINEAR", "SVM POLY", "SVM RADIAL", 
 	"KNN", 
-	"BAGGING", "RANDOM FOREST", 
-	"XGBOOST", "LIGHT GBM", #"CATBOOST", 
-	"CUBIST", 
+	"TREE", "BAGGING", "RANDOM FOREST", 
+	"XGBOOST", "LIGHT GBM", 
 	"MLP"
 )
 
 results <- map2(
 	wrkfl_fit_list, 
 	methods_list, 
-	~ collect_results(.x, y = "SalePrice", mode = "regression", method = .y)
+	~ collect_results(.x, y = "Value", mode = "classification", method = .y)
 )
 
 metrics <- results %>% map("pred_metrics") %>% bind_rows()
@@ -582,18 +529,25 @@ metrics %>%
 	filter(Type == "testing") %>% 
 	DT::datatable(options = list(pageLength = 15))
 
-preds <- results %>% map("pred_results") %>% bind_rows()
-p <- preds %>% 
-	select(-Type) %>% 
-	group_by(Method) %>% 
-	mutate(id = 1:n()) %>% 
-	ungroup() %>% 
-	ggplot(aes(x = id)) +
-	geom_point(aes(y = Actual, col = "Actual")) +
-	geom_point(aes(y = Pred, col = "Pred")) +
-	scale_color_manual(values = c("black", "red")) +
-	labs(x = "", y = "") +
+rocs <- results %>% map("pred_roc") %>% bind_rows()
+p_rocs <- rocs %>% 
+	ggplot(aes(x = 1 - specificity, y = sensitivity, col = Type)) +
+	geom_path() +
+	geom_abline(lty = 3) +
+	coord_equal() + 
+	scale_color_viridis_d(option = "plasma", end = .6) +
 	facet_wrap(~ Method, ncol = 3) +
 	theme_minimal() 
-plotly::ggplotly(p)
+plotly::ggplotly(p_rocs)
+
+p_rocs_methods <- rocs %>% 
+	ggplot(aes(x = 1 - specificity, y = sensitivity, col = Method)) +
+	geom_path() +
+	geom_abline(lty = 3) +
+	coord_equal() + 
+	facet_wrap(~ Type, ncol = 3) +
+	theme_minimal() 
+plotly::ggplotly(p_rocs_methods)
+
+preds <- results %>% map("pred_results") %>% bind_rows()
 

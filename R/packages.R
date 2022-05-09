@@ -18,6 +18,7 @@ pkgs <- c(
   "treesnip",
   "rules",
   "Cubist",
-  "baguette"
+  "baguette",
+  "discrim"
 )
 install_and_load(pkgs)

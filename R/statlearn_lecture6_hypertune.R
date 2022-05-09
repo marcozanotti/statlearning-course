@@ -5,9 +5,9 @@
 # Marco Zanotti
 
 # Goals:
-# - 
-# - 
-# - 
+# - Tuning
+# - Grids
+# - Cross-Validation
 
 
 
@@ -37,7 +37,6 @@ cells %>% glimpse()
 cells %>% 
 	count(class) %>% 
 	mutate(prop = n/sum(n))
-
 
 cells %>% 
 	skimr::skim() 
@@ -283,4 +282,187 @@ final_fit %>%
 
 # These are the automated image analysis measurements that are the most 
 # important in driving segmentation quality predictions.
+
+
+
+# Regression with ML Models -----------------------------------------------
+
+source("R/utils.R")
+source("R/packages.R")
+
+# Data --------------------------------------------------------------------
+
+# * Load Data
+artifacts_list <- read_rds("artifacts/artifacts_list.rds")
+data <- artifacts_list$reg_data
+
+# * Train / Test Sets 
+set.seed(123)
+splits <- initial_split(data, prop = .8)
+
+# * Recipes 
+rcp_spec <- recipe(SalePrice ~ ., data = training(splits)) %>% 
+	step_dummy(all_nominal(), -all_outcomes())
+rcp_spec %>% prep() %>% juice() %>% glimpse()
+
+
+# Cross-Validation --------------------------------------------------------
+
+set.seed(123)
+folds <- vfold_cv(training(splits))
+
+
+# Hyperparameter Tuning ---------------------------------------------------
+
+# * Engine
+model_spec <- linear_reg(
+	mode = "regression",
+	penalty = tune(),
+	mixture = tune()
+) %>%
+	set_engine("glmnet")
+model_spec
+
+# * Workflow
+wrkfl <- workflow() %>%
+	add_model(model_spec) %>%
+	add_recipe(rcp_spec)
+
+# * Grid Search
+args(linear_reg)
+penalty()
+mixture()
+
+set.seed(123)
+model_grid <- grid_regular(
+	penalty(),
+	mixture(),
+	levels = 10
+)
+model_grid
+model_grid %>% map(unique)
+
+# * Tuning
+set.seed(123)
+model_res <- wrkfl %>% 
+	tune_grid(
+		resamples = folds,
+		grid = model_grid
+	)
+model_res
+
+
+# Evaluation --------------------------------------------------------------
+
+model_res %>% collect_metrics()
+model_res %>% show_best("rmse", n = 3)
+
+best_model <- model_res %>%	select_best("rmse")
+best_model
+
+autoplot(mlp_reg_tune) + 
+	scale_color_viridis_d(direction = -1) + 
+	theme(legend.position = "top")
+
+
+# Re-fitting --------------------------------------------------------------
+
+wrkfl_fit_final <-	wrkfl %>%	
+	finalize_workflow(best_model) %>% 
+  last_fit(splits) 
+
+wrkfl_fit_final %>%	collect_metrics()
+wrkfl_fit_final %>% collect_predictions()
+
+
+
+# Classification with ML Models -------------------------------------------
+
+source("R/utils.R")
+source("R/packages.R")
+
+# Data --------------------------------------------------------------------
+
+# * Load Data
+artifacts_list <- read_rds("artifacts/artifacts_list.rds")
+data <- artifacts_list$class_data
+
+# * Train / Test Sets
+set.seed(123)
+splits <- initial_split(data, prop = .8)
+
+# * Recipes
+rcp_spec <- recipe(Value ~ ., data = training(splits)) %>% 
+	step_dummy(all_nominal(), -all_outcomes())
+rcp_spec %>% prep() %>% juice() %>% glimpse()
+
+
+# Cross-Validation --------------------------------------------------------
+
+set.seed(123)
+folds <- vfold_cv(training(splits))
+
+
+# Hyperparameter Tuning ---------------------------------------------------
+
+# * Engine
+model_spec <- boost_tree(
+	mode = "classification",
+	mtry = tune(),
+	trees = 1000,
+	min_n = tune(),
+	tree_depth = tune(),
+	learn_rate = 0.0005
+) %>%
+	set_engine("xgboost")
+model_spec
+
+# * Workflow
+wrkfl <- workflow() %>%
+	add_model(model_spec) %>%
+	add_recipe(rcp_spec)
+
+# * Grid Search
+args(boost_tree)
+mtry() # must specify the range
+min_n()
+tree_depth()
+
+set.seed(123)
+model_grid <- grid_regular(
+	mtry(range = c(1, 40)),
+	min_n(),
+	tree_depth(),
+	levels = 3
+)
+model_grid
+model_grid %>% map(unique)
+
+# * Tuning
+set.seed(123)
+model_res <- wrkfl %>% 
+	tune_grid(
+		resamples = folds,
+		grid = model_grid
+	)
+model_res
+
+
+# Evaluation --------------------------------------------------------------
+
+model_res %>% collect_metrics()
+model_res %>% show_best("roc_auc", n = 3)
+
+best_model <- model_res %>%	select_best("roc_auc")
+best_model
+
+
+# Re-fitting --------------------------------------------------------------
+
+wrkfl_fit_final <-	wrkfl %>%	
+	finalize_workflow(best_model) %>% 
+	last_fit(splits) 
+
+wrkfl_fit_final %>%	collect_metrics()
+wrkfl_fit_final %>% collect_predictions()
 
