@@ -324,3 +324,51 @@ collect_results <- function(model_fit, y, mode, method) {
 	
 }
 
+
+# Function to evaluate stacking ensembles
+calibrate_evaluate_stacks <- function(
+	model_stacks,
+	y, 
+	mode, 
+	type = "testing", 
+	print = TRUE
+) {
+	
+	if (type == "testing") {
+		new_data <- testing(splits)
+	} else {
+		new_data <- training(splits)
+	}
+	
+	pred_res <- predict(model_stacks, new_data, members = TRUE) %>% 
+		bind_cols(
+			new_data %>% select(all_of(y)),
+			.
+		) %>% 
+		rename("Actual" = all_of(y), "Pred" = ".pred")
+
+	pred_met <-	colnames(pred_res) %>%
+		map_dfr(rmse, truth = Actual, data = pred_res) %>%
+		mutate(
+			Member = colnames(pred_res),
+			Member = ifelse(Member == "Pred", "stack", Member)
+		) %>% 
+		dplyr::slice(-1) %>% 
+		select(Member, .metric, .estimate) %>% 
+		set_names("Member", "Metric", "Estimate") %>% 
+		add_column("Type" = type)
+	
+	if (print) {
+		print(pred_met)
+	}
+	
+	res <- list(
+		"pred_results" = pred_res,
+		"pred_metrics" = pred_met
+	)
+	
+	return(invisible(res))
+	
+}
+
+

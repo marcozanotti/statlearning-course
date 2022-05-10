@@ -8,6 +8,7 @@ pkgs <- c(
   "DataExplorer",
   "plotly",
   "tidymodels",
+  "stacks",
   "broom.mixed",
   "rstanarm",
   "vip",

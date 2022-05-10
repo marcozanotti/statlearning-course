@@ -290,7 +290,7 @@ final_fit %>%
 source("R/utils.R")
 source("R/packages.R")
 
-# Data --------------------------------------------------------------------
+# * Data ------------------------------------------------------------------
 
 # * Load Data
 artifacts_list <- read_rds("artifacts/artifacts_list.rds")
@@ -306,13 +306,13 @@ rcp_spec <- recipe(SalePrice ~ ., data = training(splits)) %>%
 rcp_spec %>% prep() %>% juice() %>% glimpse()
 
 
-# Cross-Validation --------------------------------------------------------
+# * Cross-Validation ------------------------------------------------------
 
 set.seed(123)
 folds <- vfold_cv(training(splits))
 
 
-# Hyperparameter Tuning ---------------------------------------------------
+# * Hyperparameter Tuning -------------------------------------------------
 
 # * Engine
 model_spec <- linear_reg(
@@ -352,7 +352,7 @@ model_res <- wrkfl %>%
 model_res
 
 
-# Evaluation --------------------------------------------------------------
+# * Evaluation ------------------------------------------------------------
 
 model_res %>% collect_metrics()
 model_res %>% show_best("rmse", n = 3)
@@ -365,7 +365,7 @@ autoplot(mlp_reg_tune) +
 	theme(legend.position = "top")
 
 
-# Re-fitting --------------------------------------------------------------
+# * Re-fitting ------------------------------------------------------------
 
 wrkfl_fit_final <-	wrkfl %>%	
 	finalize_workflow(best_model) %>% 
@@ -381,7 +381,7 @@ wrkfl_fit_final %>% collect_predictions()
 source("R/utils.R")
 source("R/packages.R")
 
-# Data --------------------------------------------------------------------
+# * Data ------------------------------------------------------------------
 
 # * Load Data
 artifacts_list <- read_rds("artifacts/artifacts_list.rds")
@@ -397,13 +397,13 @@ rcp_spec <- recipe(Value ~ ., data = training(splits)) %>%
 rcp_spec %>% prep() %>% juice() %>% glimpse()
 
 
-# Cross-Validation --------------------------------------------------------
+# * Cross-Validation ------------------------------------------------------
 
 set.seed(123)
 folds <- vfold_cv(training(splits))
 
 
-# Hyperparameter Tuning ---------------------------------------------------
+# * Hyperparameter Tuning -------------------------------------------------
 
 # * Engine
 model_spec <- boost_tree(
@@ -448,7 +448,7 @@ model_res <- wrkfl %>%
 model_res
 
 
-# Evaluation --------------------------------------------------------------
+# * Evaluation ------------------------------------------------------------
 
 model_res %>% collect_metrics()
 model_res %>% show_best("roc_auc", n = 3)
@@ -457,7 +457,7 @@ best_model <- model_res %>%	select_best("roc_auc")
 best_model
 
 
-# Re-fitting --------------------------------------------------------------
+# * Re-fitting ------------------------------------------------------------
 
 wrkfl_fit_final <-	wrkfl %>%	
 	finalize_workflow(best_model) %>% 

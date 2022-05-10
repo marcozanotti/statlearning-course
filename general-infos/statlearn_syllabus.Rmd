@@ -36,14 +36,26 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-## Lecture 2: Deep Neural Networks with Keras
+## Lecture 2: Machine Learning, Regression & Classification
 
 
 
-## Lecture 3: Automatic Machine Learning with H2O
+## Lecture 3: Hyperparameter Tuning
 
 
 
-## Lecture 4: Explainable AI
+## Lecture 4: Ensemble Learning & Stacking
+
+
+
+## Lecture 5: Automatic Machine Learning
+
+
+
+## Lecture 6: Deep Neural Networks
+
+
+
+## Lecture 7: Explainable AI
 
 
