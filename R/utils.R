@@ -155,7 +155,7 @@ prepare_house_prices <- function(data, target) {
 			YearSold = as.factor(YrSold),
 			TotalIndoorSF = TotalBsmtSF + `1stFlrSF` + `2ndFlrSF` + GarageArea
 		) %>% 
-		select( # remove some "useless" variables
+		dplyr::select( # remove some "useless" variables
 			-c(
 				Id, MSSubClass, MSZoning, Street, Utilities, LandSlope, 
 				Neighborhood, Condition1, Condition2, OverallQual, OverallCond,
@@ -189,7 +189,7 @@ evaluate_model <- function(prediction_results, mode, type) {
 	if (mode == "regression") {
 		res <- prediction_results %>% 
 			metrics(truth = Actual, estimate = Pred) %>% 
-			select(.metric, .estimate) %>% 
+			dplyr::select(.metric, .estimate) %>% 
 			set_names("Metric", "Estimate") %>% 
 			add_column("Type" = type)
 	} else {
@@ -199,7 +199,7 @@ evaluate_model <- function(prediction_results, mode, type) {
 			prediction_results %>% metrics(truth = Actual, estimate = Pred),
 			prediction_results %>% roc_auc(truth = Actual, estimate = Prob_Low)
 		) %>% 
-			select(.metric, .estimate) %>% 
+			dplyr::select(.metric, .estimate) %>% 
 			set_names("Metric", "Estimate") %>% 
 			add_column("Type" = type)
 		res_roc <- prediction_results %>%
@@ -218,7 +218,7 @@ plot_model <- function(prediction_results, mode) {
 	
 	if (mode == "regression") {
 		p <- prediction_results %>% 
-			select(-Type) %>% 
+			dplyr::select(-Type) %>% 
 			mutate(id = 1:n()) %>% 
 			ggplot(aes(x = id)) +
 			geom_point(aes(y = Actual, col = "Actual")) +
@@ -260,7 +260,7 @@ calibrate_evaluate_plot <- function(
 	if (mode == "regression") {
 		pred_res <- model_fit %>% 
 			augment(new_data) %>%
-			select(all_of(y), .pred) %>% 
+			dplyr::select(all_of(y), .pred) %>% 
 			set_names(c("Actual", "Pred")) %>% 
 			# bind_cols(
 			# 	model_fit %>% 
@@ -271,7 +271,7 @@ calibrate_evaluate_plot <- function(
 	} else {
 		pred_res <- model_fit %>% 
 			augment(new_data) %>%
-			select(all_of(y), contains(".pred")) %>% 
+			dplyr::select(all_of(y), contains(".pred")) %>% 
 			set_names(c("Actual", "Pred", "Prob_Low", "Prob_High")) %>% 
 			add_column("Type" = type)
 	}
@@ -342,19 +342,27 @@ calibrate_evaluate_stacks <- function(
 	
 	pred_res <- predict(model_stacks, new_data, members = TRUE) %>% 
 		bind_cols(
-			new_data %>% select(all_of(y)),
+			new_data %>% dplyr::select(all_of(y)),
 			.
-		) %>% 
-		rename("Actual" = all_of(y), "Pred" = ".pred")
+		)  %>% 
+		rename("Actual" = all_of(y)) %>% 
+		rename_with(~ str_replace_all(., ".pred", "Pred"))
+	
+	if (mode == "regression") {
+		metric <- rmse
+	} else {
+		pred_res <- pred_res %>% rename("Pred" = "Pred_class")
+		metric <- accuracy
+	}
 
 	pred_met <-	colnames(pred_res) %>%
-		map_dfr(rmse, truth = Actual, data = pred_res) %>%
+		map_dfr(metric, truth = Actual, data = pred_res) %>%
 		mutate(
 			Member = colnames(pred_res),
 			Member = ifelse(Member == "Pred", "stack", Member)
 		) %>% 
 		dplyr::slice(-1) %>% 
-		select(Member, .metric, .estimate) %>% 
+		dplyr::select(Member, .metric, .estimate) %>% 
 		set_names("Member", "Metric", "Estimate") %>% 
 		add_column("Type" = type)
 	
@@ -371,4 +379,111 @@ calibrate_evaluate_stacks <- function(
 	
 }
 
+
+# Mode 
+stat_mode <- function(x) {
+	ux <- unique(x)
+	mode <- ux[which.max(tabulate(match(x, ux)))]
+	return(mode)
+} 
+
+
+# Function to compute simple ensembles
+simple_ensemble <- function(
+	model_results, 
+	workflows,
+	y,
+	mode, 
+	ensemble_fun,
+	print = TRUE
+) {
+	
+	finalizing_and_fitting <- function(workfl, param) {
+		res <- finalize_workflow(workfl, param) %>% 
+			last_fit(splits)
+		return(res)
+	}
+	
+	methods <- names(model_results)
+	
+	if (mode == "regression") {
+		
+		best_models <- model_results %>% map(select_best, metric = "rmse")
+		wrkfls_fit_final <-	map2(workflows, best_models, finalizing_and_fitting)
+		
+		pred_res <- wrkfls_fit_final %>% 
+			map(collect_predictions) %>% 
+			map(".pred") %>% 
+			bind_cols() %>% 
+			rename_with(~ str_c("Pred_", .)) %>% 
+			dplyr::rowwise() %>% 
+			mutate(Ensemble = ensemble_fun(c_across(everything())), .before = 1) %>% 
+			ungroup() 
+
+		ensemble_met <- rmse_vec(
+			truth = wrkfls_fit_final[[1]] %>% collect_predictions() %>% pull(y), 
+			estimate = pred_res$Ensemble
+		) 
+		members_met <- wrkfls_fit_final %>% 
+			map(collect_metrics) %>% 
+			map2(
+				methods, 
+				~ mutate(.x, Member = .y) %>% 
+					dplyr::filter(.metric == "rmse") %>% 
+					dplyr::select(Member, .metric, .estimate) %>% 
+					set_names(c("Member", "Metric", "Estimate"))
+			) %>%
+			bind_rows()
+		pred_met <- bind_rows(
+			tibble("Member" = "ensemble", "Metric" = "rmse", "Estimate" = ensemble_met),
+			members_met
+		)
+		
+	} else {
+		
+		best_models <- model_results %>% map(select_best, metric = "accuracy")
+		wrkfls_fit_final <-	map2(workflows, best_models, finalizing_and_fitting)
+		
+		pred_res <- wrkfls_fit_final %>% 
+			map(collect_predictions) %>% 
+			map(".pred_class") %>% 
+			bind_cols() %>% 
+			rename_with(~ str_c("Pred_", .)) %>% 
+			dplyr::rowwise() %>% 
+			mutate(Ensemble = ensemble_fun(c_across(everything())), .before = 1) %>% 
+			ungroup() 
+		
+		ensemble_met <- accuracy_vec(
+			truth = wrkfls_fit_final[[1]] %>% collect_predictions() %>% pull(y), 
+			estimate = pred_res$Ensemble
+		) 
+		members_met <- wrkfls_fit_final %>% 
+			map(collect_metrics) %>% 
+			map2(
+				methods, 
+				~ mutate(.x, Member = .y) %>% 
+					dplyr::filter(.metric == "accuracy") %>% 
+					dplyr::select(Member, .metric, .estimate) %>% 
+					set_names(c("Member", "Metric", "Estimate"))
+			) %>%
+			bind_rows()
+		pred_met <- bind_rows(
+			tibble("Member" = "ensemble", "Metric" = "rmse", "Estimate" = ensemble_met),
+			members_met
+		)
+		
+	}
+	
+	if (print) {
+		print(pred_met)
+	}
+	
+	res <- list(
+		"pred_results" = pred_res,
+		"pred_metrics" = pred_met
+	)
+	
+	return(invisible(res))
+	
+}
 

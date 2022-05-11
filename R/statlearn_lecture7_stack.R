@@ -423,12 +423,155 @@ autoplot(fit_model_stack, type = "weights")
 fit_model_stack %>% calibrate_evaluate_stacks(y = "SalePrice", mode = "regression")
 
 
+# * Comparison with simple Ensembles --------------------------------------
+
+wrkfls <- list(
+	"elanet" = wrkfl_elanet, 
+	"xgb" = wrkfl_xgb,
+	"nnet" = wrkfl_nnet
+)
+
+model_results <- list(
+	"elanet" = model_res_elanet, 
+	"xgb" = model_res_xgb,
+	"nnet" = model_res_nnet
+)
+
+# Average Ensemble
+simple_ensemble(model_results, wrkfls, y = "SalePrice", mode = "regression", ensemble_fun = mean)
+
+# Median Ensemble
+simple_ensemble(model_results, wrkfls, y = "SalePrice", mode = "regression", ensemble_fun = median)
 
 
 
+# Classification with ML Models -------------------------------------------
+
+source("R/utils.R")
+source("R/packages.R")
+
+# * Data ------------------------------------------------------------------
+
+# * Load Data
+artifacts_list <- read_rds("artifacts/artifacts_list.rds")
+data <- artifacts_list$class_data
+
+# * Train / Test Sets 
+set.seed(123)
+splits <- initial_split(data, prop = .8)
+
+# * Recipes 
+rcp_spec <- recipe(Value ~ ., data = training(splits)) %>% 
+	step_dummy(all_nominal(), -all_outcomes())
+rcp_spec %>% prep() %>% juice() %>% glimpse()
+
+# * Cross-Validation
+set.seed(123)
+folds <- vfold_cv(training(splits), v = 5)
 
 
+# * Base Models -----------------------------------------------------------
+
+# * NAIVE BAYES
+model_spec_nb <- naive_Bayes() %>%
+	set_engine("klaR")
+
+wrkfl_nb <- workflow() %>%
+	add_model(model_spec_nb) %>%
+	add_recipe(rcp_spec)
+
+set.seed(123)
+model_res_nb <- wrkfl_nb %>% 
+	fit_resamples(
+		resamples = folds,
+		control = control_stack_resamples()
+	)
 
 
+# * KNN
+model_spec_knn <- nearest_neighbor(
+	mode = "classification",
+	neighbors = tune(),
+	dist_power = tune(),
+	weight_func = "optimal"
+) %>%
+	set_engine("kknn")
 
+wrkfl_knn <- workflow() %>%
+	add_model(model_spec_knn) %>%
+	add_recipe(rcp_spec) 
+
+set.seed(123)
+model_res_knn <- wrkfl_knn %>% 
+	tune_grid(
+		resamples = folds,
+		grid = 5,
+		control = control_stack_grid()
+	)
+
+
+# * RANDOM FOREST
+model_spec_rf <- rand_forest(
+	mode = "classification",
+	mtry = tune(),
+	min_n = tune(),
+	trees = 1000
+) %>%
+	set_engine("ranger")
+
+wrkfl_rf <- workflow() %>%
+	add_model(model_spec_rf) %>%
+	add_recipe(rcp_spec)
+
+set.seed(123)
+model_res_rf <- wrkfl_rf %>% 
+	tune_grid(
+		resamples = folds,
+		grid = 5,
+		control = control_stack_grid()
+	)
+
+
+# * Stacking Ensembles ----------------------------------------------------
+
+# * Data Stack
+data_stack <- stacks() %>%
+	add_candidates(model_res_nb) %>%
+	add_candidates(model_res_knn) %>%
+	add_candidates(model_res_rf)
+data_stack
+
+# * Model Stack
+model_stack <- data_stack %>%	blend_predictions()
+model_stack
+
+# * Ensembling
+fit_model_stack <- model_stack %>% fit_members()
+fit_model_stack
+
+
+# * Evaluation ------------------------------------------------------------
+
+autoplot(fit_model_stack)
+autoplot(fit_model_stack, type = "weights")
+
+fit_model_stack %>% calibrate_evaluate_stacks(y = "Value", mode = "classification")
+
+
+# * Comparison with Simple Ensembles --------------------------------------
+
+wrkfls <- list(
+	"nb" = wrkfl_nb, 
+	"knn" = wrkfl_knn,
+	"rf" = wrkfl_rf
+)
+
+model_results <- list(
+	"nb" = model_res_nb, 
+	"knn" = model_res_knn,
+	"rf" = model_res_rf
+)
+
+# Mode Ensemble
+simple_ensemble(model_results, wrkfls, y = "Value", mode = "classification", ensemble_fun = stat_mode)
 
