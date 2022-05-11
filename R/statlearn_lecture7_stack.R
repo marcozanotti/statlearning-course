@@ -70,7 +70,7 @@ wind_raw <- read_csv("data/wind.csv")
 # and qualitative variables with a lot of levels.
 
 wind <-	wind_raw %>%
-	select(
+	dplyr::select(
 		province_territory, 
 		total_project_capacity_mw,
 		turbine_rated_capacity_kw = turbine_rated_capacity_k_w,
@@ -86,7 +86,7 @@ wind <-	wind_raw %>%
 			TRUE ~ province_territory
 		)
 	) %>%
-	filter(!is.na(year)) %>%
+	dplyr::filter(!is.na(year)) %>%
 	ungroup()
 wind
 
@@ -305,7 +305,7 @@ colnames(test_pred_member) %>%
 
 
 
-# Regression with ML Models -----------------------------------------------
+# Regression - The House Prices Dataset -----------------------------------
 
 source("R/utils.R")
 source("R/packages.R")
@@ -445,7 +445,7 @@ simple_ensemble(model_results, wrkfls, y = "SalePrice", mode = "regression", ens
 
 
 
-# Classification with ML Models -------------------------------------------
+# Classification - The House Prices Dataset -------------------------------
 
 source("R/utils.R")
 source("R/packages.R")

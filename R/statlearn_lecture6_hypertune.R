@@ -285,7 +285,7 @@ final_fit %>%
 
 
 
-# Regression with ML Models -----------------------------------------------
+# Regression - The House Prices Dataset -----------------------------------
 
 source("R/utils.R")
 source("R/packages.R")
@@ -376,7 +376,7 @@ wrkfl_fit_final %>% collect_predictions()
 
 
 
-# Classification with ML Models -------------------------------------------
+# Classification - The House Prices Dataset -------------------------------
 
 source("R/utils.R")
 source("R/packages.R")
