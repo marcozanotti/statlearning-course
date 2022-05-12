@@ -20,7 +20,6 @@ pkgs <- c(
   "rules",
   "Cubist",
   "baguette",
-  "discrim",
-  "h20"
+  "discrim"
 )
 install_and_load(pkgs)

@@ -7,6 +7,7 @@
 # Goals:
 # - H2O
 # - AutoML
+# - Tidymodels H2O integration
 
 
 
@@ -92,6 +93,9 @@ h2o.clusterInfo()
 
 # * Data Conversion -------------------------------------------------------
 
+source("R/utils.R")
+source("R/packages.R")
+
 # We use again the Canadian Wind Turbine Database from Natural Resources Canada.
 wind_raw <- read_csv("data/wind.csv")
 wind <-	wind_raw %>%
@@ -112,11 +116,13 @@ wind <-	wind_raw %>%
 		) %>% as.factor()
 	) %>%
 	dplyr::filter(!is.na(year)) %>%
-	ungroup()
+	ungroup() %>% 
+	drop_na()
 wind
 
 # Convert data into H2O frame
 wind_h2o <- as.h2o(wind)
+wind_h2o
 
 h2o.ls()
 h2o.describe(wind_h2o)
@@ -129,11 +135,7 @@ h2o.describe(wind_h2o)
 # data into an exact 80%-20% split. Setting the seed allows us to create 
 # reproducible results.
 
-splits <- h2o.splitFrame(
-	data = wind_h2o,
-	ratios = c(0.8),  # partition data into 80% and 20% chunks
-	seed = 123
-)
+splits <- h2o.splitFrame(data = wind_h2o, ratios = c(0.8), seed = 123) # partition data into 80% and 20% chunks
 
 train <- splits[[1]]
 test <- splits[[2]]
@@ -148,38 +150,128 @@ h2o.nrow(test)
 # We’ve got our H2O instance up and running, with some data in it. Let’s go 
 # ahead and do some machine learning.
 
+# Y and X variable names
 y <- "turbine_rated_capacity_kw"
 x <- setdiff(names(wind_h2o), y)
+
+
+# ** GLM ------------------------------------------------------------------
+
+h2o_glm <- h2o.glm(
+	x = x, y = y,
+	training_frame = train,
+	nfolds = 5,
+	model_id = "glm",
+	seed = 123,
+	keep_cross_validation_predictions = TRUE
+)
+
+h2o.performance(h2o_glm, test) 
+h2o.predict(h2o_glm, test)
+
+
+# ** Random Forest --------------------------------------------------------
 
 h2o_rf <- h2o.randomForest(
 	x = x, y = y,
 	training_frame = train,
 	nfolds = 5,
 	model_id = "rf",
-	seed = 123
+	seed = 123,
+	keep_cross_validation_predictions = TRUE
 )
-print(h2o_rf)
 
-
-h2o.performance(model = h2o_rf, newdata = test)
+h2o.performance(h2o_rf, test) 
 h2o.predict(h2o_rf, test)
 
 
+# ** GBM ------------------------------------------------------------------
+
+h2o_gbm <- h2o.gbm(
+	x = x, y = y,
+	training_frame = train,
+	nfolds = 5,
+	model_id = "gbm",
+	seed = 123,
+	keep_cross_validation_predictions = TRUE
+)
+
+h2o.performance(h2o_gbm, test) 
+h2o.predict(h2o_gbm, test)
 
 
+# ** XGBoost --------------------------------------------------------------
+
+h2o_xgb <- h2o.xgboost(
+	x = x, y = y,
+	training_frame = train,
+	nfolds = 5,
+	model_id = "xgb",
+	seed = 123, 
+	keep_cross_validation_predictions = TRUE
+)
+
+h2o.performance(h2o_xgb, test) 
+h2o.predict(h2o_xgb, test)
 
 
+# ** Neural Networks ------------------------------------------------------
+
+h2o_nnet <- h2o.deeplearning(
+	x = x, y = y,
+	training_frame = train,
+	nfolds = 5,
+	model_id = "nnet",
+	seed = 123, 
+	keep_cross_validation_predictions = TRUE
+)
+
+h2o.performance(h2o_nnet, test) 
+h2o.predict(h2o_nnet, test)
 
 
+# ** Stacking Ensemble ----------------------------------------------------
+
+h2o_stack <- h2o.stackedEnsemble(
+	x = x, y = y,
+	training_frame = train,
+	model_id = "stack",
+	base_models = c(h2o_rf, h2o_xgb, h2o_nnet),
+	metalearner_algorithm = "AUTO",
+	metalearner_nfolds = 5,
+	seed = 123
+)
+
+h2o.performance(h2o_stack, test) 
+h2o.predict(h2o_stack, test)
 
 
+# * Evaluation ------------------------------------------------------------
+
+evaluate_h2o <- function(h2o_model, metric) {
+	
+	res <- h2o.performance(h2o_model, test)@metrics[[metric]]
+	return(res)
+	
+}
+
+h2o_models <- list(
+	"glm" = h2o_glm,
+	"rf" = h2o_rf,
+	"gbm" = h2o_gbm,
+	"xgb" = h2o_xgb,
+	"nnet" = h2o_nnet,
+	"stack" = h2o_stack
+)
+
+map_df(h2o_models, evaluate_h2o, metric = "RMSE") %>% 
+	pivot_longer(cols = everything()) %>% 
+	set_names(c("Method", "RMSE"))
 
 
+# * Shout-down H2O --------------------------------------------------------
 
-
-
-
-
+h2o.shutdown(prompt = FALSE)
 
 
 
@@ -213,71 +305,345 @@ h2o.predict(h2o_rf, test)
 # configure values for max_runtime_secs and/or max_models to set explicit time 
 # or number-of-model limits on your run.
 
+h2o.init()
+wind_h2o <- as.h2o(wind)
+splits <- h2o.splitFrame(data = wind_h2o, ratios = c(0.8), seed = 123) # partition data into 80% and 20% chunks
+train <- splits[[1]]
+test <- splits[[2]]
+y <- "turbine_rated_capacity_kw"
+x <- setdiff(names(wind_h2o), y)
 
 
+# * AutoML Estimation -----------------------------------------------------
 
-train <- h2o.importFile("https://s3.amazonaws.com/erin-data/higgs/higgs_train_10k.csv")
-test <- h2o.importFile("https://s3.amazonaws.com/erin-data/higgs/higgs_test_5k.csv")
-
-# Identify predictors and response
-y <- "response"
-x <- setdiff(names(train), y)
-
-# For binary classification, response should be a factor
-train[, y] <- as.factor(train[, y])
-test[, y] <- as.factor(test[, y])
+# - DRF (This includes both the Distributed Random Forest (DRF) and Extremely 
+#   Randomized Trees (XRT) models. Refer to the Extremely Randomized Trees 
+#   section in the DRF chapter and the histogram_type parameter description 
+#   for more information.)
+# - GLM (Generalized Linear Model with regularization)
+# - XGBoost (XGBoost GBM)
+# - GBM (H2O GBM)
+# - DeepLearning (Fully-connected multi-layer artificial neural network)
+#   StackedEnsemble (Stacked Ensembles, includes an ensemble of all the base 
+#   models and ensembles using subsets of the base models)
 
 # Run AutoML for 20 base models
-aml <- h2o.automl(
+h2o_auto <- h2o.automl(
 	x = x, y = y,
 	training_frame = train,
-	max_models = 1,
-	seed = 1
+	nfolds = 5,
+	max_models = 10,
+	# max_runtime_secs = 30,
+	# max_runtime_secs_per_model = 30,
+	# exclude_algos = c("DeepLearnig"),
+	# include_algos = c("DRF")
+	seed = 123
 )
-
-# View the AutoML Leaderboard
-lb <- aml@leaderboard
-print(lb, n = nrow(lb))
-
-# To generate predictions on a test set, you can make predictions
-# directly on the `H2OAutoML` object or on the leader model
-# object directly
-pred <- h2o.predict(aml, test)  # predict(aml, test) also works
-
-# or:
-pred <- h2o.predict(aml@leader, test)
-
-# Get leaderboard with all possible columns
-lb <- h2o.get_leaderboard(object = aml, extra_columns = "ALL")
-lb
+h2o_auto
 
 
-# Get the best model using the metric
-m <- aml@leader
-# this is equivalent to
-m <- h2o.get_best_model(aml)
+# * Extract Models --------------------------------------------------------
 
-# Get the best model using a non-default metric
-m <- h2o.get_best_model(aml, criterion = "logloss")
+# AutoML leaderboard
+lb <- h2o.get_leaderboard(object = h2o_auto, extra_columns = "ALL")
+print(lb, n = nrow(lb)) # 10 models + 11 stacks
 
-# Get the best XGBoost model using default sort metric
-xgb <- h2o.get_best_model(aml, algorithm = "xgboost")
+# AutoML Best Model
+h2o_best <- h2o.get_best_model(h2o_auto)
+h2o_best
 
-# Get the best XGBoost model, ranked by logloss
-xgb <- h2o.get_best_model(aml, algorithm = "xgboost", criterion = "logloss")
+h2o.get_best_model(h2o_auto, criterion = "logloss") # get the best model using logloss sort metric
+h2o.get_best_model(h2o_auto, algorithm = "xgboost") # get the best XGBoost model using default sort metric
+h2o.get_best_model(h2o_auto, algorithm = "xgboost", criterion = "logloss") # get the best XGBoost model, ranked by logloss
 
 
+# * Evaluate Results ------------------------------------------------------
 
+h2o.performance(h2o_best, test)
+evaluate_h2o(h2o_best, "RMSE")
+
+# shout-down H2O 
+h2o.shutdown(prompt = FALSE)
 
 
 
 # Tidymodels Interface to H20 ---------------------------------------------
 
+# https://github.com/stevenpawley/h2oparsnip
+
+# h2oparsnip provides a set of wrappers to bind h2o algorthms with the 
+# 'parsnip' package.
+
+# This package is early in development. Currently the following h2o algorithms 
+# are implemented:
+ 	
+# 	- h2o.naiveBayes engine added to naive_Bayes specification
+# 	- h2o.glm engine added to multinom_reg, logistic_reg and linear_reg model specifications
+#   - h2o.randomForest engine added to parsnip::rand_forest model specification
+#   - h2o.gbm engine added to parsnip::boost_tree model specification
+#   - h2o.deeplearning engine added to parsnip::mlp model specification
+#   - a new model, automl
+#   - h2o.rulefit engine added to parsnip::rule_fit
+
+# The package currently is based on the concept of using h2o as a disposable 
+# backend, using h2o as a drop-in replacement for the traditionally used 
+# 'engines' within the parsnip package. However, performing tasks such as 
+# hyperparameter tuning via the 'tune' packge will be less efficient if 
+# working on a remote cluster than using h2o directly because data is being 
+# sent back and forth.
+
+# h2oparsnip also does not provide any management of the h2o cluster. If lots 
+# of models are being run then available memory within the cluster may be 
+# exhausted. Currently this has to be managed using the commands in the h2o 
+# package.
+
+# The package is not yet on CRAN and can be installed with
+devtools::install_github("stevenpawley/h2oparsnip")
+library(h2oparsnip)
+
+h2o.init()
 
 
+# * Data ------------------------------------------------------------------
+
+# split into training and testing sets
+set.seed(123)
+splits <- initial_split(wind)
+
+# use a 5-fold cross-validation
+set.seed(123)
+folds <- rsample::vfold_cv(training(splits), v = 5)
+
+# set up a basic recipe
+rcp_spec <- recipe(turbine_rated_capacity_kw ~ ., data = training(splits)) %>%
+	step_dummy(all_nominal()) %>%
+	step_zv(all_predictors())
+
+# for simplicity we use just rmse
+metric <- metric_set(rmse)
 
 
+# ** GLM ------------------------------------------------------------------
 
+# Engine
+model_spec_glm <- linear_reg(
+	mode = "regression",
+	penalty = tune(),
+	mixture = tune()
+) %>%
+	set_engine("h2o")
+
+# Workflow
+wrkfl_glm <- workflow() %>% 
+	add_recipe(rcp_spec) %>% 
+	add_model(model_spec_glm)
+
+# Grid
+set.seed(123)
+grid_glm <- grid_regular(
+	penalty(),
+	mixture(),
+	levels = 3
+)
+
+# Fit
+set.seed(123)
+wrkfl_fit_glm <- wrkfl_glm %>%  
+	tune_grid(
+		resamples = folds,
+		grid = grid_glm,
+		metrics = metric
+	)
+wrkfl_fit_glm
+
+# A problem with using tune::tune_grid is that performance is reduced because 
+# the data for every tuning hyperparameter iteration and resampling is moved 
+# from R to the h2o cluster. To minimize this, the tune_grid_h2o function can
+# be used to tune model arguments, as a near drop-in replacement:
+	
+wrkfl_fit_glm_h2otune <- wrkfl_glm %>% 
+	tune_grid_h2o(
+	  resamples = folds,
+	  grid = grid_glm,
+	  metrics = metric
+	)
+wrkfl_fit_glm_h2otune
+
+# Currently, tune_grid_h2o can only tune model parameters and does not handle 
+# recipes with tunable parameters. tune_grid_h2o moves the data to the h2o 
+# cluster only once, i.e. the complete dataset specified by the resamples 
+# argument is moved to the cluster, and then the equivalent h2o.frame is split 
+# based on the row indices in the resampling object, and the h2o::h2o.grid 
+# function is used for tuning on the h2o frames. To avoid repeatedly moving 
+# predictions back from h2o to R, all metrics are also calculated on the cluster. 
+# This restricts the range of metrics to what is available in h2o (tune_grid_h2o
+# maps yardstick metrics to their h2o equivalents). The available metrics are 
+# listed in the tune_grid_h2o help documentation. However, hyperparameter tuning 
+# using tune_grid_h2o should be similarly performant as when using h2o directly.
+
+
+# ** Random Forest --------------------------------------------------------
+
+# Engine
+model_spec_rf <- rand_forest(
+	mode = "regression",
+	mtry = tune(),
+	min_n = tune(),
+	trees = 1000
+) %>%
+	set_engine("h2o")
+
+# Workflow
+wrkfl_rf <- workflow() %>% 
+	add_recipe(rcp_spec) %>% 
+	add_model(model_spec_rf)
+
+# Grid
+set.seed(123)
+grid_rf <- grid_regular(
+	mtry(range = c(1, 20)),
+	min_n(),
+	levels = 3
+)
+
+# Fit
+set.seed(123)
+wrkfl_fit_rf_h2otune <- wrkfl_rf %>% 
+	tune_grid_h2o(
+		resamples = folds,
+		grid = grid_rf,
+		metrics = metric
+	)
+wrkfl_fit_rf_h2otune
+
+
+# ** GBM ------------------------------------------------------------------
+
+# Engine
+model_spec_gbm <- boost_tree(
+	mode = "regression",
+	mtry = tune(),
+	min_n = tune(),
+	trees = 1000
+) %>%
+	set_engine("h2o")
+
+# Workflow
+wrkfl_gbm <- workflow() %>% 
+	add_recipe(rcp_spec) %>% 
+	add_model(model_spec_gbm)
+
+# Grid
+set.seed(123)
+grid_gbm <- grid_regular(
+	mtry(range = c(1, 20)),
+	min_n(),
+	levels = 3
+)
+
+# Fit
+set.seed(123)
+wrkfl_fit_gbm_h2otune <- wrkfl_gbm %>% 
+	tune_grid_h2o(
+		resamples = folds,
+		grid = grid_gbm,
+		metrics = metric
+	)
+wrkfl_fit_gbm_h2otune
+
+
+# ** Neural Networks ------------------------------------------------------
+
+# Engine
+model_spec_nnet <- mlp(
+	mode = "regression",
+	epochs = tune(),
+	hidden_units = tune()
+) %>%
+	set_engine("h2o")
+
+# Workflow
+wrkfl_nnet <- workflow() %>% 
+	add_recipe(rcp_spec) %>% 
+	add_model(model_spec_nnet)
+
+# Grid
+set.seed(123)
+grid_nnet <- grid_regular(
+	epochs(),
+	hidden_units(),
+	levels = 3
+)
+
+# Fit
+set.seed(123)
+wrkfl_fit_nnet_h2otune <- wrkfl_nnet %>% 
+	tune_grid_h2o(
+		resamples = folds,
+		grid = grid_nnet,
+		metrics = metric
+	)
+wrkfl_fit_nnet_h2otune
+
+
+# ** AutoML ---------------------------------------------------------------
+
+# Engine
+model_spec_automl <- automl(mode = "regression") %>%
+	set_engine("h2o")
+
+# Workflow
+wrkfl_automl <- workflow() %>% 
+	add_recipe(rcp_spec) %>% 
+	add_model(model_spec_automl)
+
+# Fit
+# NOT TO BE RUN!!!!!!!!!!!!!!! REALLY SLOW
+# set.seed(123)
+# wrkfl_fit_automl_h2otune <- wrkfl_automl %>% 
+# 	fit_resamples(
+# 		resamples = folds,
+# 		metrics = metric
+# 	)
+# wrkfl_fit_automl_h2otune
+
+# NOT TO BE RUN!!!!!!!!!!!!!!! REALLY SLOW
+# set.seed(123)
+# fit_automl <- h2o_automl_train(turbine_rated_capacity_kw ~ ., data = wind)
+# fit_automl
+
+
+# * Evaluate Results ------------------------------------------------------
+
+wrkfls <- list(
+	"glm" = wrkfl_glm,
+	"rf" = wrkfl_rf,
+	"gbm" = wrkfl_gbm,
+	"nnet" = wrkfl_nnet
+)
+
+model_results <- list(
+	"glm" = wrkfl_fit_glm_h2otune,
+	"rf" = wrkfl_fit_rf_h2otune,
+	"gbm" = wrkfl_fit_gbm_h2otune,
+	"nnet" = wrkfl_fit_nnet_h2otune
+)
+
+model_results %>% map(collect_metrics) # validation set metrics
+best_models <- model_results %>% map(select_best, metric = "rmse")
+
+wrkfls_fit_final <- map2(wrkfls, best_models, finalizing_and_fitting) 
+
+wrkfl_fit_final %>%	
+	map(collect_metrics) %>% 
+	map2(
+		names(wrkfls), 
+		~ mutate(.x, Member = .y) %>% 
+			dplyr::filter(.metric == "rmse") %>% 
+			dplyr::select(Member, .metric, .estimate) %>% 
+			set_names(c("Member", "Metric", "Estimate"))
+	) %>%
+	bind_rows()
 
 
 
@@ -322,6 +688,12 @@ splits <- initial_split(data, prop = .8)
 rcp_spec <- recipe(Value ~ ., data = training(splits)) %>% 
 	step_dummy(all_nominal(), -all_outcomes())
 rcp_spec %>% prep() %>% juice() %>% glimpse()
+
+
+
+# For binary classification, response should be a factor
+train[, y] <- as.factor(train[, y])
+test[, y] <- as.factor(test[, y])
 
 
 

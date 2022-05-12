@@ -360,10 +360,6 @@ model_res %>% show_best("rmse", n = 3)
 best_model <- model_res %>%	select_best("rmse")
 best_model
 
-autoplot(mlp_reg_tune) + 
-	scale_color_viridis_d(direction = -1) + 
-	theme(legend.position = "top")
-
 
 # * Re-fitting ------------------------------------------------------------
 

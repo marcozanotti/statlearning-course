@@ -388,6 +388,14 @@ stat_mode <- function(x) {
 } 
 
 
+# Function to finalize and fitting models
+finalizing_and_fitting <- function(workfl, param) {
+	res <- finalize_workflow(workfl, param) %>% 
+		last_fit(splits)
+	return(res)
+}
+
+
 # Function to compute simple ensembles
 simple_ensemble <- function(
 	model_results, 
@@ -397,12 +405,6 @@ simple_ensemble <- function(
 	ensemble_fun,
 	print = TRUE
 ) {
-	
-	finalizing_and_fitting <- function(workfl, param) {
-		res <- finalize_workflow(workfl, param) %>% 
-			last_fit(splits)
-		return(res)
-	}
 	
 	methods <- names(model_results)
 	
