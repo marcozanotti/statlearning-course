@@ -489,3 +489,11 @@ simple_ensemble <- function(
 	
 }
 
+
+# Function to evaluate h2o models
+evaluate_h2o <- function(h2o_model, metric) {
+	
+	res <- h2o.performance(h2o_model, test)@metrics[[metric]]
+	return(res)
+	
+}

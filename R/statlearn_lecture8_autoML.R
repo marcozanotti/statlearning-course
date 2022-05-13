@@ -248,13 +248,6 @@ h2o.predict(h2o_stack, test)
 
 # * Evaluation ------------------------------------------------------------
 
-evaluate_h2o <- function(h2o_model, metric) {
-	
-	res <- h2o.performance(h2o_model, test)@metrics[[metric]]
-	return(res)
-	
-}
-
 h2o_models <- list(
 	"glm" = h2o_glm,
 	"rf" = h2o_rf,
@@ -651,6 +644,8 @@ wrkfl_fit_final %>%
 
 source("R/utils.R")
 source("R/packages.R")
+library(h2o)
+
 
 # * Data ------------------------------------------------------------------
 
@@ -658,14 +653,56 @@ source("R/packages.R")
 artifacts_list <- read_rds("artifacts/artifacts_list.rds")
 data <- artifacts_list$reg_data
 
-# * Train / Test Sets 
-set.seed(123)
-splits <- initial_split(data, prop = .8)
+# * Feature Engineering via recipe 
+data_feats <- recipe(SalePrice ~ ., data = data) %>% 
+	step_dummy(all_nominal(), -all_outcomes()) %>% 
+	prep() %>% 
+	juice()
+data_feats %>% glimpse()
 
-# * Recipes 
-rcp_spec <- recipe(SalePrice ~ ., data = training(splits)) %>% 
-	step_dummy(all_nominal(), -all_outcomes())
-rcp_spec %>% prep() %>% juice() %>% glimpse()
+
+# * AutoML H2O ------------------------------------------------------------
+
+# Initialize H2O
+Sys.setenv(JAVA_HOME = "/usr/lib/jvm/jdk-17/")
+h2o.init()
+
+# Data Conversion
+data_h2o <- as.h2o(data_feats)
+splits <- h2o.splitFrame(data = data_h2o, ratios = c(0.8), seed = 123) # partition data into 80% and 20% chunks
+train <- splits[[1]]
+test <- splits[[2]]
+y <- "SalePrice"
+x <- setdiff(names(data_h2o), y)
+
+# Run AutoML for 20 base models
+h2o_auto <- h2o.automl(
+	x = x, y = y,
+	training_frame = train,
+	nfolds = 5,
+	max_models = 20,
+	# max_runtime_secs = 30,
+	max_runtime_secs_per_model = 20,
+	# exclude_algos = c("DeepLearnig"),
+	# include_algos = c("DRF")
+	seed = 123
+)
+h2o_auto
+
+# AutoML leaderboard
+lb <- h2o.get_leaderboard(object = h2o_auto)
+print(lb, n = nrow(lb)) 
+
+# AutoML Best Model
+h2o_best <- h2o.get_best_model(h2o_auto)
+h2o_best
+
+# Evaluate Results 
+h2o.performance(h2o_best, test)
+evaluate_h2o(h2o_best, "RMSE")
+
+# shout-down H2O 
+h2o.shutdown(prompt = FALSE)
 
 
 
@@ -673,6 +710,8 @@ rcp_spec %>% prep() %>% juice() %>% glimpse()
 
 source("R/utils.R")
 source("R/packages.R")
+library(h2o)
+
 
 # * Data ------------------------------------------------------------------
 
@@ -680,20 +719,58 @@ source("R/packages.R")
 artifacts_list <- read_rds("artifacts/artifacts_list.rds")
 data <- artifacts_list$class_data
 
-# * Train / Test Sets
-set.seed(123)
-splits <- initial_split(data, prop = .8)
-
-# * Recipes
-rcp_spec <- recipe(Value ~ ., data = training(splits)) %>% 
-	step_dummy(all_nominal(), -all_outcomes())
-rcp_spec %>% prep() %>% juice() %>% glimpse()
-
+# * Feature Engineering via recipe 
+data_feats <- recipe(Value ~ ., data = data) %>% 
+	step_dummy(all_nominal(), -all_outcomes()) %>% 
+	step_mutate(Value = as.factor(as.character(Value))) %>% 
+	prep() %>% 
+	juice()
+data_feats %>% glimpse()
 
 
-# For binary classification, response should be a factor
-train[, y] <- as.factor(train[, y])
-test[, y] <- as.factor(test[, y])
+# * AutoML H2O ------------------------------------------------------------
 
+# Initialize H2O
+Sys.setenv(JAVA_HOME = "/usr/lib/jvm/jdk-17/")
+h2o.init()
 
+# Data Conversion
+data_h2o <- as.h2o(data_feats)
+splits <- h2o.splitFrame(data = data_h2o, ratios = c(0.8), seed = 123) # partition data into 80% and 20% chunks
+train <- splits[[1]]
+test <- splits[[2]]
+y <- "Value"
+x <- setdiff(names(data_h2o), y)
 
+# for classification, response should be a factor
+# train[, y] <- as.factor(train[, y])
+# test[, y] <- as.factor(test[, y])
+
+# Run AutoML for 20 base models
+h2o_auto <- h2o.automl(
+	x = x, y = y,
+	training_frame = train,
+	nfolds = 5,
+	# max_models = 20,
+	max_runtime_secs = 30,
+	# max_runtime_secs_per_model = 20,
+	# exclude_algos = c("DeepLearnig"),
+	# include_algos = c("DRF")
+	seed = 123
+)
+h2o_auto
+
+# AutoML leaderboard
+lb <- h2o.get_leaderboard(object = h2o_auto)
+print(lb, n = nrow(lb)) 
+
+# AutoML Best Model
+h2o_best <- h2o.get_best_model(h2o_auto)
+h2o_best
+
+# Evaluate Results 
+h2o.performance(h2o_best, test)
+evaluate_h2o(h2o_best, "AUC")
+
+# shout-down H2O 
+h2o.shutdown(prompt = FALSE)
