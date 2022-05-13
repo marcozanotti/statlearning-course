@@ -284,8 +284,7 @@
 # ** Tuning ---------------------------------------------------------------
 
 # Find an optimal model by tuning different hyperparameters. There are many ways
-# to tune a DNN. Typically, the tuning process follows these general steps; 
-# however, there is often a lot of iteration among these:
+# to tune a DNN. Typically, the tuning process follows these general steps:
 	
 #   - Adjust model capacity (layers & nodes);
 #   - Add batch normalization;
@@ -446,29 +445,242 @@
 
 # * Installation ----------------------------------------------------------
 
+# https://tensorflow.rstudio.com/installation/
+# https://rstudio.github.io/reticulate/articles/python_packages.html
+
+
+# First, install the reticulate package
+
+install.packages("reticulate")
+
+# Then, install the tensorflow R package from GitHub as follows
+
+install.packages("tensorflow")
+
+# Then, use the install_tensorflow() function to install TensorFlow. Note that 
+# on Windows you need a working installation of Anaconda.
+
+library(tensorflow)
+install_tensorflow()
+
+# or a specific version via install_tensorflow(version = "2.6.2").
+# install_tensorflow is a wraper around reticulate::py_install().
+# You can confirm that the installation succeeded with
+	
+library(tensorflow)
+tensorflow::tf_config()
+tensorflow::tf_version()
+
+tf$constant("Hellow Tensorflow")
+## tf.Tensor(b'Hellow Tensorflow', shape=(), dtype=string)
+
+# This will provide you with a default installation of TensorFlow suitable for 
+# use with the tensorflow R package. Read on if you want to learn about 
+# additional installation options, including installing a version of TensorFlow 
+# that takes advantage of Nvidia GPUs if you have the correct CUDA libraries 
+# installed.
+
+
+# Alternatively, you may directly install keras with
+	
+install.packages("keras")
+
+# The Keras R interface uses the TensorFlow backend engine by default.
+
+library(keras)
+keras::install_keras()
+
+# This will provide you with default CPU-based installations of Keras and 
+# TensorFlow. If you want a more customized installation, e.g. if you want to 
+# take advantage of NVIDIA GPUs, see the documentation for install_keras() and 
+# the installation section.
+
+# Finally, you should also install some useful helpers Tensorflow packages
+
+install.packages("tfruns")
+install.packages("tfestimators")
+
 
 # * Loading ---------------------------------------------------------------
 
+library(dplyr)
+
+library(keras) # for fitting DNNs
+library(tfruns) # for additional grid search & model training functions
+library(tfestimators) # provides grid search & model training interface
 
 
+# * Data ------------------------------------------------------------------
+
+# We’ll use the MNIST data to illustrate various DNN concepts. With DNNs, it is 
+# important to note a few items:
+# 	- Feedforward DNNs require all feature inputs to be numeric. Consequently, 
+#     if your data contains categorical features they will need to be numerically 
+#     encoded (e.g., one-hot encoded, integer label encoded, etc.).
+#   - Due to the data transformation process that DNNs perform, they are highly 
+#     sensitive to the individual scale of the feature values. Consequently, we
+#     should standardize our features first. Although the MNIST features are
+#     measured on the same scale (0–255), they are not standardized (i.e., have 
+#     mean zero and unit variance); the code chunk below standardizes the MNIST 
+#     data to resolve this.
+#   - Since we are working with a multinomial response (0–9), keras requires our 
+#     response to be a one-hot encoded matrix, which can be accomplished with the
+#     keras function to_categorical().
+    
+# Import MNIST training data
+mnist <- dslabs::read_mnist()
+mnist_train_x <- mnist$train$images
+mnist_train_y <- mnist$train$labels
+mnist_test_x <- mnist$test$images
+mnist_test_y <- mnist$test$labels
+
+# Rename columns and standardize feature values
+colnames(mnist_train_x) <- paste0("V", 1:ncol(mnist_train_x))
+colnames(mnist_test_x) <- paste0("V", 1:ncol(mnist_test_x))
+mnist_train_x <- mnist_train_x / 255
+mnist_test_x <- mnist_test_x / 255
+
+# One-hot encode response
+mnist_train_y <- to_categorical(mnist_train_y, 10)
+mnist_test_y <- to_categorical(mnist_test_y, 10)
 
 
+# * Create Network Structure ----------------------------------------------
+
+# The keras package allows us to develop our network with a layering approach. 
+# First, we initiate our sequential feedforward DNN architecture with 
+# keras_model_sequential() and then add some dense layers. This example creates 
+# two hidden layers, the first with 128 nodes and the second with 64, followed 
+# by an output layer with 10 nodes. One thing to point out is that the first 
+# layer needs the input_shape argument to equal the number of features in your 
+# data; however, the successive layers are able to dynamically interpret the 
+# number of expected inputs based on the previous layer.
+
+model <- keras_model_sequential() %>%
+	layer_dense(units = 128, input_shape = ncol(mnist_x)) %>%
+	layer_dense(units = 64) %>%
+	layer_dense(units = 10)
+summary(model)
 
 
+# * Control Activations ---------------------------------------------------
+
+# To control the activation functions used in our layers we specify the 
+# activation argument. For the two hidden layers we add the ReLU activation 
+# function and for the output layer we specify activation = softmax (since 
+# MNIST is a multinomial classification problem).
+
+model <- keras_model_sequential() %>%
+	layer_dense(units = 128, activation = "relu", input_shape = p) %>%
+	layer_dense(units = 64, activation = "relu") %>%
+	layer_dense(units = 10, activation = "softmax")
+summary(model)
 
 
+# * Incorporate Backpropagation -------------------------------------------
+
+# To incorporate the backpropagation piece of our DNN we include compile() in our
+# code sequence. In addition to the optimizer and loss function arguments, we 
+# can also identify one or more metrics in addition to our loss function to track 
+# and report.
+
+compile(
+	loss = 'categorical_crossentropy',
+	optimizer = optimizer_rmsprop(),
+	metrics = c('accuracy')
+)
+
+model <- keras_model_sequential() %>%
+	# Network architecture
+	layer_dense(units = 128, activation = "relu", input_shape = ncol(mnist_x)) %>%
+	layer_dense(units = 64, activation = "relu") %>%
+	layer_dense(units = 10, activation = "softmax") %>%
+	# Backpropagation
+	compile(
+		loss = 'categorical_crossentropy',
+		optimizer = optimizer_rmsprop(),
+		metrics = c('accuracy')
+	)
+summary(model)
 
 
+# * Training --------------------------------------------------------------
+
+# We’ve created a base model, now we just need to train it with some data. To do
+# so we feed our model into a fit() function along with our training data. We 
+# also provide a few other arguments that are worth mentioning:
+ 	
+# 	- batch_size: As we mentioned in the last section, the DNN will take a batch
+#     of data to run through the mini-batch SGD process. Batch sizes can be 
+#     between one and several hundred. Small values will be more computationally 
+#     burdensome while large values provide less feedback signal. Values are 
+#     typically provided as a power of two that fit nicely into the memory 
+#     requirements of the GPU or CPU hardware like 32, 64, 128, 256, and so on.
+#   - epochs: An epoch describes the number of times the algorithm sees the 
+#     entire data set. So, each time the algorithm has seen all samples in the 
+#     data set, an epoch has completed. In our training set, we have 60,000 
+#     observations so running batches of 128 will require 469 passes for one 
+#     epoch. The more complex the features and relationships in your data, the 
+#     more epochs you’ll require for your model to learn, adjust the weights, 
+#     and minimize the loss function.
+#   - validation_split: The model will hold out XX% of the data so that we can 
+#     compute a more accurate estimate of an out-of-sample error rate.
+#   - verbose: We set this to FALSE for brevity; however, when TRUE you will see
+#     a live update of the loss function in your RStudio IDE.
+    
+# Plotting the output shows how our loss function (and specified metrics) improve 
+# for each epoch. We see that our model’s performance is optimized at 5–10 epochs 
+# and then proceeds to overfit, which results in a flatlined accuracy rate.
+
+# Train the model
+net_fit <- model %>%
+	fit(
+		x = mnist_train_x,
+		y = mnist_train_y,
+		epochs = 25,
+		batch_size = 128,
+		validation_split = 0.2,
+		verbose = FALSE
+	)
+net_fit
+## Trained on 48,000 samples, validated on 12,000 samples (batch_size=128, epochs=25)
+## Final epoch (plot to see history):
+## val_loss: 0.1512
+##  val_acc: 0.9773
+##     loss: 0.002308
+##      acc: 0.9994
+plot(net_fit)
 
 
+# * Evaluating ------------------------------------------------------------
+
+# We can now make predictions with our model using the predict function
+
+preds <- predict(net_fit, mnist_test_x)
+head(preds, 2)
+
+# By default predict will return the output of the last Keras layer. In our case
+# this is the probability for each class. You can also use predict_classes and 
+# predict_proba to generate class and probability - these functions are slighly 
+# different then predict since they will be run in batches.
+
+# You can access the model performance on a different dataset using the evaluate 
+# function, for example
+	
+model %>%	evaluate(mnist_test_x, mnist_test_y, verbose = 0)
 
 
+# * Tuning ----------------------------------------------------------------
 
+# Now that we have an understanding of producing and running a DNN model, the 
+# next task is to find an optimal model by tuning different hyperparameters. 
+# There are many ways to tune a DNN. Typically, the tuning process follows z
+# these general steps:
 
-
-
-
-
+#   - Adjust model capacity (layers & nodes);
+#   - Add batch normalization;
+#   - Add regularization;
+#   - Adjust learning rate.
 
 
 
