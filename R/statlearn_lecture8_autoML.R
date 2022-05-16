@@ -359,6 +359,10 @@ evaluate_h2o(h2o_best, "RMSE")
 h2o.shutdown(prompt = FALSE)
 
 
+# * Tuning with H2O -------------------------------------------------------
+
+
+
 
 # Tidymodels Interface to H20 ---------------------------------------------
 

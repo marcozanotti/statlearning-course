@@ -489,6 +489,7 @@ install.packages("keras")
 
 library(keras)
 keras::install_keras()
+# keras::install_keras(version = "2.6.0")
 
 # This will provide you with default CPU-based installations of Keras and 
 # TensorFlow. If you want a more customized installation, e.g. if you want to 
@@ -499,12 +500,48 @@ keras::install_keras()
 
 install.packages("tfruns")
 install.packages("tfestimators")
+install.packages("tfdatasets")
+
+
+# * Problem: Keras does not find Python envs ------------------------------
+
+# https://cran.r-project.org/web/packages/digitalDLSorteR/vignettes/kerasIssues.html
+
+# If you experiment errors related to its installation and/or keras is not 
+# able to find a functional Python environment, you can manually install the 
+# conda environment by following these steps:
+
+#  1) in case you don’t have miniconda installed, use the following R code 
+#     using reticulate
+reticulate::install_miniconda()
+
+#  2) create an empty conda env
+reticulate::conda_create(envname = "keras-env",	packages = "python==3.7.11")
+reticulate::conda_list() # available environments
+# Or type in a Terminal: conda create --name keras-env python=3.7 tensorflow=2.1
+
+#  3) Then, instead of using keras::install_keras() function, run the following 
+#     code chunk using the tensorflow R package. This code will create a Python 
+#     interpreter with tensorflow with all its dependencies covered
+tensorflow::install_tensorflow(
+	method = "conda", 
+	conda = reticulate::conda_binary("auto"), 
+	envname = "keras-env", 
+	version = "2.1.0-cpu",
+)
+
+#  4) Finally, if keras still does not recognize the functional environment, 
+#     set this new environment as the selected Python environment
+tensorflow::use_condaenv("keras-env")
+reticulate::py_config()
 
 
 # * Loading ---------------------------------------------------------------
 
-library(dplyr)
+tensorflow::use_condaenv("keras-env")
+reticulate::py_config()
 
+library(dplyr)
 library(keras) # for fitting DNNs
 library(tfruns) # for additional grid search & model training functions
 library(tfestimators) # provides grid search & model training interface
@@ -541,8 +578,8 @@ mnist_train_x <- mnist_train_x / 255
 mnist_test_x <- mnist_test_x / 255
 
 # One-hot encode response
-mnist_train_y <- to_categorical(mnist_train_y, 10)
-mnist_test_y <- to_categorical(mnist_test_y, 10)
+mnist_train_y <- keras::to_categorical(mnist_train_y, 10)
+mnist_test_y <- keras::to_categorical(mnist_test_y, 10)
 
 
 # * Create Network Structure ----------------------------------------------
@@ -557,7 +594,7 @@ mnist_test_y <- to_categorical(mnist_test_y, 10)
 # number of expected inputs based on the previous layer.
 
 model <- keras_model_sequential() %>%
-	layer_dense(units = 128, input_shape = ncol(mnist_x)) %>%
+	layer_dense(units = 128, input_shape = ncol(mnist_train_x)) %>%
 	layer_dense(units = 64) %>%
 	layer_dense(units = 10)
 summary(model)
@@ -571,7 +608,7 @@ summary(model)
 # MNIST is a multinomial classification problem).
 
 model <- keras_model_sequential() %>%
-	layer_dense(units = 128, activation = "relu", input_shape = p) %>%
+	layer_dense(units = 128, activation = "relu", input_shape = ncol(mnist_train_x)) %>%
 	layer_dense(units = 64, activation = "relu") %>%
 	layer_dense(units = 10, activation = "softmax")
 summary(model)
@@ -592,7 +629,7 @@ compile(
 
 model <- keras_model_sequential() %>%
 	# Network architecture
-	layer_dense(units = 128, activation = "relu", input_shape = ncol(mnist_x)) %>%
+	layer_dense(units = 128, activation = "relu", input_shape = ncol(mnist_train_x)) %>%
 	layer_dense(units = 64, activation = "relu") %>%
 	layer_dense(units = 10, activation = "softmax") %>%
 	# Backpropagation
@@ -656,8 +693,11 @@ plot(net_fit)
 
 # We can now make predictions with our model using the predict function
 
-preds <- predict(net_fit, mnist_test_x)
-head(preds, 2)
+preds <- predict(model, mnist_test_x)
+head(preds) %>% round()
+
+preds_class <- predict_classes(model, mnist_test_x) 
+head(preds_class)
 
 # By default predict will return the output of the last Keras layer. In our case
 # this is the probability for each class. You can also use predict_classes and 
@@ -684,10 +724,588 @@ model %>%	evaluate(mnist_test_x, mnist_test_y, verbose = 0)
 
 
 
+# ** Model Capacity -------------------------------------------------------
+
+# Typically, we start by maximizing predictive performance based on model 
+# capacity. Higher model capacity (i.e., more layers and nodes) results in more 
+# memorization capacity for the model. On one hand, this can be good as it 
+# allows the model to learn more features and patterns in the data. On the other 
+# hand, a model with too much capacity will overfit to the training data. 
+# Typically, we look to maximize validation error performance while minimizing 
+# model capacity. As an example, we assessed nine different model capacity 
+# settings that include the following number of layers and nodes while 
+# maintaining all other parameters the same as the models in the previous 
+# sections (i.e.. our medium sized 2-hidden layer network contains 64 nodes in 
+# the first layer and 32 in the second.).
+
+params <- data.frame(
+	u1 = c(16, 64, 256, 16, 64, 256, 16, 64, 256),
+	u2 = c(NA, NA, NA, 8, 32, 128, 8, 32, 128),
+	u3 = c(NA, NA, NA, NA, NA, NA, 4, 16, 64),
+	type = c("small", "medium", "large"), 
+	n_layers = c(rep(1, 3), rep(2, 3), rep(3, 3))
+)
+params
+
+res_list <- vector("list", ncol(params))
+for (i in 1:nrow(params)) {
+	n_layers <- params$n_layers[i]
+	print(i)
+	if (n_layers == 1) {
+		res_list[[i]] <- keras_model_sequential() %>%
+			layer_dense(units = params$u1[i], activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+			layer_dense(units = 10, activation = "softmax") %>%
+			compile(
+				loss = 'categorical_crossentropy', optimizer = optimizer_rmsprop(), metrics = c('accuracy')
+			) %>% 
+			fit(
+				x = mnist_train_x, y = mnist_train_y, 
+				epochs = 25, batch_size = 128, validation_split = 0.2, verbose = FALSE
+			) %>% plot()
+	} else if (n_layers == 2) {
+		res_list[[i]] <- keras_model_sequential() %>%
+			layer_dense(units = params$u1[i], activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+			layer_dense(units = params$u2[i], activation = "relu") %>%
+			layer_dense(units = 10, activation = "softmax") %>%
+			compile(
+				loss = 'categorical_crossentropy', optimizer = optimizer_rmsprop(), metrics = c('accuracy')
+			) %>% 
+			fit(
+				x = mnist_train_x, y = mnist_train_y, 
+				epochs = 25, batch_size = 128, validation_split = 0.2, verbose = FALSE
+			) %>% plot()
+	} else {
+		res_list[[i]] <- keras_model_sequential() %>%
+			layer_dense(units = params$u1[i], activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+			layer_dense(units = params$u2[i], activation = "relu") %>%
+			layer_dense(units = params$u3[i], activation = "relu") %>%
+			layer_dense(units = 10, activation = "softmax") %>%
+			compile(
+				loss = 'categorical_crossentropy', optimizer = optimizer_rmsprop(), metrics = c('accuracy')
+			) %>% 
+			fit(
+				x = mnist_train_x, y = mnist_train_y, 
+				epochs = 25, batch_size = 128, validation_split = 0.2, verbose = FALSE
+			) %>% plot()
+	}
+}
+
+library(patchwork)
+# type on columns and num layers on rows
+(res_list[[1]] + res_list[[4]] + res_list[[7]]) / 
+	(res_list[[2]] + res_list[[5]] + res_list[[8]]) / 
+	(res_list[[3]] + res_list[[6]] + res_list[[9]]) +
+	plot_layout(guides = "collect") &
+	ggplot2::theme_minimal()
+
+# The models that performed best had 2–3 hidden layers with a medium to large 
+# number of nodes. All the “small” models underfit and would require more epochs 
+# to identify their minimum validation error. The large 3-layer model overfits 
+# extremely fast. Preferably, we want a model that overfits more slowly such as 
+# the 1- and 2-layer medium and large models (Chollet and Allaire 2018).
+
+# If none of your models reach a flatlined validation error such as all the 
+# “small” models in Figure 13.7, increase the number of epochs trained. 
+# Alternatively, if your epochs flatline early then there is no reason to run so 
+# many epochs as you are just wasting computational energy with no gain. We can 
+# add a callback() function inside of fit() to help with this. There are multiple
+# callbacks to help automate certain tasks. One such callback is early stopping, 
+# which will stop training if the loss function does not improve for a specified 
+# number of epochs.
+
+
+# ** Batch Normalization --------------------------------------------------
+
+# We’ve normalized the data before feeding it into our model, but data 
+# normalization should be a concern after every transformation performed by the 
+# network. Batch normalization (Ioffe and Szegedy 2015) is a recent advancement 
+# that adaptively normalizes data even as the mean and variance change over time 
+# during training. The main effect of batch normalization is that it helps with 
+# gradient propagation, which allows for deeper networks. Consequently, as the 
+# depth of your networks increase, batch normalization becomes more important 
+# and can improve performance.
+
+layer_dense(units = 256, activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+	layer_batch_normalization() 
+
+# We can add batch normalization by including layer_batch_normalization() after 
+# each middle layer within the network architecture section of our code.
+	
+batch_list <- vector("list", ncol(params))
+for (i in 1:nrow(params)) {
+	n_layers <- params$n_layers[i]
+	print(i)
+	if (n_layers == 1) {
+		batch_list[[i]] <- keras_model_sequential() %>%
+			layer_dense(units = params$u1[i], activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+			layer_batch_normalization() %>%
+			layer_dense(units = 10, activation = "softmax") %>%
+			compile(
+				loss = 'categorical_crossentropy', optimizer = optimizer_rmsprop(), metrics = c('accuracy')
+			) %>% 
+			fit(
+				x = mnist_train_x, y = mnist_train_y, 
+				epochs = 25, batch_size = 128, validation_split = 0.2, verbose = FALSE
+			) %>% plot()
+	} else if (n_layers == 2) {
+		batch_list[[i]] <- keras_model_sequential() %>%
+			layer_dense(units = params$u1[i], activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+			layer_batch_normalization() %>%
+			layer_dense(units = params$u2[i], activation = "relu") %>%
+			layer_batch_normalization() %>%
+			layer_dense(units = 10, activation = "softmax") %>%
+			compile(
+				loss = 'categorical_crossentropy', optimizer = optimizer_rmsprop(), metrics = c('accuracy')
+			) %>% 
+			fit(
+				x = mnist_train_x, y = mnist_train_y, 
+				epochs = 25, batch_size = 128, validation_split = 0.2, verbose = FALSE
+			) %>% plot()
+	} else {
+		batch_list[[i]] <- keras_model_sequential() %>%
+			layer_dense(units = params$u1[i], activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+			layer_batch_normalization() %>%
+			layer_dense(units = params$u2[i], activation = "relu") %>%
+			layer_batch_normalization() %>%
+			layer_dense(units = params$u3[i], activation = "relu") %>%
+			layer_batch_normalization() %>%
+			layer_dense(units = 10, activation = "softmax") %>%
+			compile(
+				loss = 'categorical_crossentropy', optimizer = optimizer_rmsprop(), metrics = c('accuracy')
+			) %>% 
+			fit(
+				x = mnist_train_x, y = mnist_train_y, 
+				epochs = 25, batch_size = 128, validation_split = 0.2, verbose = FALSE
+			) %>% plot()
+	}
+}
+
+# type on columns and num layers on rows
+(batch_list[[1]] + batch_list[[4]] + batch_list[[7]]) / 
+	(batch_list[[2]] + batch_list[[5]] + batch_list[[8]]) / 
+	(batch_list[[3]] + batch_list[[6]] + batch_list[[9]]) +
+	plot_layout(guides = "collect") &
+	ggplot2::theme_minimal()
+
+# If we add batch normalization to each of the previously assessed models, 
+# we see a couple patterns emerge. One, batch normalization often helps to 
+# minimize the validation loss sooner, which increases efficiency of model 
+# training. Two, we see that for the larger, more complex models (3-layer 
+# medium and 2- and 3-layer large), batch normalization helps to reduce the 
+# overall amount of overfitting. In fact, with batch normalization, our large 
+# 3-layer network now has the best validation error.
+
+
+# ** Regularization -------------------------------------------------------
+
+# Placing constraints on a model’s complexity with regularization is a common 
+# way to mitigate overfitting. DNNs models are no different and there are two
+# common approaches to regularizing neural networks. We can use an L1 or L2 
+# penalty to add a cost to the size of the node weights, although the most common 
+# penalizer is the L2 norm, which is called weight decay in the context of neural 
+# networks. Regularizing the weights will force small signals (noise) to have 
+# weights nearly equal to zero and only allow consistently strong signals to have
+# relatively larger weights.
+
+# As you add more layers and nodes, regularization with L1 or L2 penalties tend 
+# to have a larger impact on performance. Since having too many hidden units 
+# runs the risk of overparameterization, L1 or L2 penalties can shrink the extra 
+# weights toward zero to reduce the risk of overfitting.
+ 
+layer_dense(
+	units = 256, activation = "relu", input_shape = ncol(mnist_train_x),
+	kernel_regularizer = regularizer_l2(0.001)
+) 
+
+# We can add an L1, L2, or a combination of the two by adding regularizer_XX() 
+# within each layer.
+
+# Dropout (Srivastava et al. 2014b; Hinton et al. 2012) is an additional 
+# regularization method that has become one of the most common and effectively 
+# used approaches to minimize overfitting in neural networks. Dropout in the 
+# context of neural networks randomly drops out (setting to zero) a number of 
+# output features in a layer during training. By randomly removing different 
+# nodes, we help prevent the model from latching onto happenstance patterns 
+# (noise) that are not significant. Typically, dropout rates range from 0.2–0.5 
+# but can differ depending on the data (i.e., this is another tuning parameter). 
+
+layer_dense(units = 256, activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+	layer_dropout(rate = 0.2) 
+
+# Similar to batch normalization, we can apply dropout by adding layer_dropout() 
+# in between the layers.
+
+
+# ** Adjust Learning Rate -------------------------------------------------
+
+# Another issue to be concerned with is whether or not we are finding a global 
+# minimum versus a local minimum with our loss value. The mini-batch SGD 
+# optimizer we use will take incremental steps down our loss gradient until it 
+# no longer experiences improvement. The size of the incremental steps (i.e.,
+# the learning rate) will determine whether or not we get stuck in a local 
+# minimum instead of making our way to the global minimum.
+
+# There are two ways to circumvent this problem:
+# 	- The different optimizers (e.g., RMSProp, Adam, Adagrad) have different 
+#     algorithmic approaches for deciding the learning rate. We can adjust the 
+#     learning rate of a given optimizer or we can adjust the optimizer used.
+#   - We can automatically adjust the learning rate by a factor of 2–10 once the 
+#     validation loss has stopped improving.
+
+# The following builds onto our optimal model by changing the optimizer to Adam 
+# (Kingma and Ba 2014) and reducing the learning rate by a factor of 0.05 as our 
+# loss improvement begins to stall. We also add an early stopping argument to 
+# reduce unnecessary runtime. 
+
+model_adj_lrn <- keras_model_sequential() %>%
+	layer_dense(units = 256, activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+	layer_batch_normalization() %>%
+	layer_dropout(rate = 0.4) %>%
+	layer_dense(units = 128, activation = "relu") %>%
+	layer_batch_normalization() %>%
+	layer_dropout(rate = 0.3) %>%
+	layer_dense(units = 64, activation = "relu") %>%
+	layer_batch_normalization() %>%
+	layer_dropout(rate = 0.2) %>%
+	layer_dense(units = 10, activation = "softmax") %>%
+	compile(
+		loss = 'categorical_crossentropy',
+		optimizer = optimizer_adam(),
+		metrics = c('accuracy')
+	) %>%
+	fit(
+		x = mnist_train_x,
+		y = mnist_train_y,
+		epochs = 35,
+		batch_size = 128,
+		validation_split = 0.2,
+		callbacks = list(
+			callback_early_stopping(patience = 5),
+			callback_reduce_lr_on_plateau(factor = 0.05)
+		),
+		verbose = FALSE
+	)
+plot(model_adj_lrn)
+
+
+# ** Grid Search ----------------------------------------------------------
+
+# Hyperparameter tuning for DNNs tends to be a bit more involved than other ML 
+# models due to the number of hyperparameters that can/should be assessed and 
+# the dependencies between these parameters. For most implementations you need 
+# to predetermine the number of layers you want and then establish your search 
+# grid. If using h2o’s h2o.deeplearning() function, then creating and executing
+# the search grid follows the same approach via h2o.grid().
+
+# However, for keras, we use flags in a similar manner but their implementation
+# provides added flexibility for tracking, visualizing, and managing training 
+# runs with the tfruns package (Allaire 2018). For a full discussion regarding 
+# flags see the https://tensorflow.rstudio.com/tools/ online resource. In this 
+# example we provide a training script mnist-grid-search.R that will be sourced 
+# for the grid search.
+
+# To create and perform a grid search, we first establish flags for the different 
+# hyperparameters of interest. These are considered the default flag values
+
+FLAGS <- flags(
+	# Nodes
+	flag_numeric("nodes1", 256),
+	flag_numeric("nodes2", 128),
+	flag_numeric("nodes3", 64),
+	# Dropout
+	flag_numeric("dropout1", 0.4),
+	flag_numeric("dropout2", 0.3),
+	flag_numeric("dropout3", 0.2),
+	# Learning paramaters
+	flag_string("optimizer", "rmsprop"),
+	flag_numeric("lr_annealing", 0.1)
+)
+
+# Next, we incorprate the flag parameters within our model
+	
+model_grid <- keras_model_sequential() %>%
+	layer_dense(units = FLAGS$nodes1, activation = "relu", input_shape = ncol(mnist_train_x)) %>%
+	layer_batch_normalization() %>%
+	layer_dropout(rate = FLAGS$dropout1) %>%
+	layer_dense(units = FLAGS$nodes2, activation = "relu") %>%
+	layer_batch_normalization() %>%
+	layer_dropout(rate = FLAGS$dropout2) %>%
+	layer_dense(units = FLAGS$nodes3, activation = "relu") %>%
+	layer_batch_normalization() %>%
+	layer_dropout(rate = FLAGS$dropout3) %>%
+	layer_dense(units = 10, activation = "softmax") %>%
+	compile(
+		loss = 'categorical_crossentropy',
+		metrics = c('accuracy'),
+		optimizer = FLAGS$optimizer
+	) %>%
+	fit(
+		x = mnist_train_x,
+		y = mnist_train_y,
+		epochs = 35,
+		batch_size = 128,
+		validation_split = 0.2,
+		callbacks = list(
+			callback_early_stopping(patience = 5),
+			callback_reduce_lr_on_plateau(factor = FLAGS$lr_annealing)
+		),
+		verbose = FALSE
+	)	
+plot(model_grid)
+
+# To execute the grid search we use tfruns::tuning_run(). Since our grid search 
+# assesses 2.916 combinations, we perform a random grid search and assess only 
+# 5% of the total models (sample = 0.05 which equates to 145 models). It becomes
+# quite obvious that the hyperparameter search space explodes quickly with DNNs 
+# since there are so many model attributes that can be adjusted. Consequently, 
+# often a full Cartesian grid search is not possible due to time and 
+# computational constraints.
+
+# The optimal model has a validation loss of 0.0686 and validation accuracy rate
+# of 0.9806 and the below code chunk shows the hyperparameter settings for this
+# optimal model.
+ 
+# The following grid search took us over 1.5 hours to run!
+
+# Run various combinations of dropout1 and dropout2
+runs <- tuning_run(
+	"scripts/mnist-grid-search.R", 
+	flags = list(
+		nodes1 = c(64, 128, 256),
+		nodes2 = c(64, 128, 256),
+		nodes3 = c(64, 128, 256),
+		dropout1 = c(0.2, 0.3, 0.4),
+		dropout2 = c(0.2, 0.3, 0.4),
+		dropout3 = c(0.2, 0.3, 0.4),
+		optimizer = c("rmsprop", "adam"),
+		lr_annealing = c(0.1, 0.05)
+	),
+	sample = 0.05
+)
+
+runs %>% 
+	filter(metric_val_loss == min(metric_val_loss)) %>% 
+	glimpse()
 
 
 
+# Keras for Regression ----------------------------------------------------
+
+tensorflow::use_condaenv("keras-env")
+reticulate::py_config()
+
+library(dplyr)
+library(keras) # for fitting DNNs
+library(tfdatasets)
 
 
+# * Data ------------------------------------------------------------------
 
+# The Boston Housing Prices dataset is accessible directly from keras.
+
+boston_housing <- dataset_boston_housing()
+
+# Train
+train_data <- boston_housing$train$x
+train_labels <- boston_housing$train$y
+paste0("Training entries: ", length(train_data), ", labels: ", length(train_labels))
+# Test
+test_data <- boston_housing$test$x
+test_labels <- boston_housing$test$y
+paste0("Test entries: ", length(test_data), ", labels: ", length(test_labels))
+
+# The dataset contains 13 different features:
+# 	- Per capita crime rate.
+#   - The proportion of residential land zoned for lots over 25,000 square feet.
+#   - The proportion of non-retail business acres per town.
+#   - Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+#   - Nitric oxides concentration (parts per 10 million).
+#   - The average number of rooms per dwelling.
+#   - The proportion of owner-occupied units built before 1940.
+#   - Weighted distances to five Boston employment centers.
+#   - Index of accessibility to radial highways.
+#   - Full-value property-tax rate per $10,000.
+#   - Pupil-teacher ratio by town.
+#   - 1000 * (Bk - 0.63) ** 2 where Bk is the proportion of Black people by town.
+#   - Percentage lower status of the population.
+
+
+# * Pre-processing --------------------------------------------------------
+
+# Each one of these input data features is stored using a different scale. Some 
+# features are represented by a proportion between 0 and 1, other features are 
+# ranges between 1 and 12, some are ranges between 0 and 100, and so on.
+
+column_names <- c(
+	'CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 
+	'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT'
+)
+
+train_df <- train_data %>% 
+	as_tibble(.name_repair = "minimal") %>% 
+	setNames(column_names) %>% 
+	mutate(label = train_labels)
+
+test_df <- test_data %>% 
+	as_tibble(.name_repair = "minimal") %>% 
+	setNames(column_names) %>% 
+	mutate(label = test_labels)
+
+# It’s recommended to normalize features that use different scales and ranges. 
+# Although the model might converge without feature normalization, it makes 
+# training more difficult, and it makes the resulting model more dependent on 
+# the choice of units used in the input.
+
+# We are going to use the feature_spec interface implemented in the tfdatasets 
+# package for normalization. The feature_columns interface allows for other 
+# common pre-processing operations on tabular data.
+
+spec <- feature_spec(train_df, label ~ .) %>% 
+	step_numeric_column(all_numeric(), normalizer_fn = scaler_standard()) %>% 
+	fit()
+spec
+
+# The spec created with tfdatasets can be used together with layer_dense_features
+# to perform pre-processing directly in the TensorFlow graph. We can take a 
+# look at the output of a dense-features layer created by this spec.
+	
+layer <- layer_dense_features(
+	feature_columns = dense_features(spec), 
+	dtype = tf$float32
+)
+layer(train_df)
+
+
+# * Network ---------------------------------------------------------------
+
+# Let’s build our model. Here we will use the Keras functional API - which is 
+# the recommended way when using the feature_spec API. Note that we only need 
+# to pass the dense_features from the spec we just created.
+
+# select inputs
+input <- layer_input_from_dataset(train_df %>% select(-label))
+
+# network structure
+output <- input %>% 
+	layer_dense_features(dense_features(spec)) %>% 
+	layer_dense(units = 64, activation = "relu") %>%
+	layer_dense(units = 64, activation = "relu") %>%
+	layer_dense(units = 1) 
+
+# combine input and output within a keras model
+model <- keras_model(input, output)
+summary(model)
+
+# We then compile the model with
+model %>% 
+	compile(
+		loss = "mse",
+		optimizer = optimizer_rmsprop(),
+		metrics = list("mean_absolute_error")
+	)
+	
+# We will wrap the model building code into a function in order to be able to 
+# reuse it for different experiments. Remember that Keras fit modifies the 
+# model in-place.
+
+build_model <- function() {
+	
+	input <- layer_input_from_dataset(train_df %>% select(-label))
+	
+	output <- input %>% 
+		layer_dense_features(dense_features(spec)) %>% 
+		layer_dense(units = 64, activation = "relu") %>%
+		layer_dense(units = 64, activation = "relu") %>%
+		layer_dense(units = 1) 
+	
+	model <- keras_model(input, output)
+	
+	model %>% 
+		compile(
+			loss = "mse",
+			optimizer = optimizer_rmsprop(),
+			metrics = list("mean_absolute_error")
+		)
+	
+	return(model)
+
+}
+
+
+# * Training --------------------------------------------------------------
+
+# The model is trained for 500 epochs, recording training and validation accuracy
+# in a keras_training_history object. We also show how to use a custom callback,
+# replacing the default training output by a single dot per epoch.
+
+# Display training progress by printing a single dot for each completed epoch.
+print_dot_callback <- callback_lambda(
+	on_epoch_end = function(epoch, logs) {
+		if (epoch %% 80 == 0) cat("\n")
+		cat(".")
+	}
+)    
+
+model <- build_model()
+
+history <- model %>% 
+	fit(
+		x = train_df %>% select(-label),
+		y = train_df$label,
+		epochs = 500,
+		validation_split = 0.2,
+		verbose = 0,
+		callbacks = list(print_dot_callback)
+	)
+
+# Now, we visualize the model’s training progress using the metrics stored in 
+# the history variable. We want to use this data to determine how long to train 
+# before the model stops making progress.
+
+plot(history)
+
+
+# * Improving -------------------------------------------------------------
+
+# This graph shows little improvement in the model after about 50 epochs. 
+# Let’s update the fit method to automatically stop training when the validation 
+# score doesn’t improve. We’ll use a callback that tests a training condition 
+# for every epoch. If a set amount of epochs elapses without showing improvement,
+# it automatically stops the training.
+
+# The patience parameter is the amount of epochs to check for improvement.
+early_stop <- callback_early_stopping(monitor = "val_loss", patience = 20)
+
+model <- build_model()
+
+history <- model %>% fit(
+	x = train_df %>% select(-label),
+	y = train_df$label,
+	epochs = 500,
+	validation_split = 0.2,
+	verbose = 0,
+	callbacks = list(early_stop)
+)
+
+plot(history)
+
+
+# * Evaluating ------------------------------------------------------------
+
+# The graph shows the average error is about $2,500 dollars. Is this good? Well,
+# $2,500 is not an insignificant amount when some of the labels are only $15,000.
+
+# Let’s see how did the model performs on the test set
+c(loss, mae) %<-% 
+	evaluate(model, test_df %>% select(-label), test_df$label, verbose = 0)
+
+paste0("Mean absolute error on test set: $", sprintf("%.2f", mae * 1000))
+
+
+# * Predicting ------------------------------------------------------------
+
+# Finally, predict some housing prices using data in the testing set
+	
+test_predictions <- model %>% predict(test_df %>% select(-label))
+test_predictions[, 1]
 
