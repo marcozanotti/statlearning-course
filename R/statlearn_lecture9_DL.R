@@ -292,7 +292,6 @@
 #   - Adjust learning rate.
 
 
-
 # * Final Considerations --------------------------------------------------
 
 # Training DNNs often requires more time and attention than other ML algorithms.
