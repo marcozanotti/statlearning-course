@@ -22,6 +22,8 @@ pkgs <- c(
   "baguette",
   "discrim",
   "dslabs", 
-  "patchwork"
+  "patchwork",
+  "DALEX",
+  "ggmosaic"
 )
 install_and_load(pkgs)

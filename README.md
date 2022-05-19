@@ -44,8 +44,9 @@ Statistics & ML:
 - [Feature Engineering and
 Selection](https://www.tidymodels.org/books/fes/)  
 - [Tidy Modelling with R](https://www.tmwr.org/)  
-- [Stacking with R](https://stacks.tidymodels.org/index.html) - [AutoML
-with H2O](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/index.html)  
+- [Stacking with R](https://stacks.tidymodels.org/index.html)  
+- [AutoML with
+H2O](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/index.html)  
 - [Deep Learning with Keras](https://keras.rstudio.com/)
 
 Everything with R:

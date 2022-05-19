@@ -78,7 +78,7 @@
 # when all the nodes in each successive layer are connected. Consequently, the 
 # more layers and nodes you add the more opportunities for new features to be 
 # learned (commonly referred to as the model’s capacity).36 Beyond the input 
-# layer, which is just our original predictor variables, there are two main 
+# layer, which is just our original pre dictor variables, there are two main 
 # types of layers to consider: hidden layers and an output layer.
 
 # Hidden layers

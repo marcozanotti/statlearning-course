@@ -116,5 +116,5 @@ knitr::opts_chunk$set(echo = TRUE)
 - tuning  
 
 
-<!-- ## Lecture 7: Explainable AI -->
+## Lecture 7: Explainable AI
 
