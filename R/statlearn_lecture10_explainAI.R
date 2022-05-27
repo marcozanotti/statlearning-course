@@ -182,6 +182,9 @@ install.packages("DALEX")
 source("R/utils.R")
 source("R/packages.R")
 
+library(DALEX)
+library(DALEXtra)
+
 
 
 # Data --------------------------------------------------------------------
@@ -330,7 +333,8 @@ plot_layout(guides = "collect") &
 
 apartments <- DALEX::apartments %>% 
 	as_tibble() %>% 
-	drop_na() 
+	drop_na() %>% 
+	rename_with(~ str_replace_all(., "\\.", "_"))
 apartments
 
 (
@@ -353,33 +357,242 @@ apartments
 
 # * Titanic Models --------------------------------------------------------
 
-# ** Logistic Regression
+titanic_train <- titanic %>% select(-contains("_cat"), -country)
 
+# ** Logistic Regression
+logit_class_spec <- logistic_reg(mode = "classification") %>% set_engine("glm")
+logit_class_fit_wrkfl <- workflow() %>% 
+	add_model(logit_class_spec) %>% 
+	add_formula(survived ~ .) %>% 
+	fit(data = titanic_train)
 
 # ** Random Forest
-
+rf_class_spec <- rand_forest(mode = "classification") %>% set_engine("ranger") 
+rf_class_fit_wrkfl <- workflow() %>% 
+	add_model(rf_class_spec) %>% 
+	add_formula(survived ~ .) %>% 
+	fit(data = titanic_train)
 
 # ** XGBoost
-
+xgb_class_spec <- boost_tree(mode = "classification") %>% set_engine("xgboost") 
+xgb_class_fit_wrkfl <- workflow() %>% 
+	add_model(xgb_class_spec) %>% 
+	add_formula(survived ~ .) %>% 
+	fit(data = titanic_train)
 
 # ** SVM
+svm_class_spec <- svm_rbf(mode = "classification") %>% set_engine("kernlab") 
+svm_class_fit_wrkfl <- workflow() %>% 
+	add_model(svm_class_spec) %>% 
+	add_formula(survived ~ .) %>% 
+	fit(data = titanic_train)
 
 
+# ** Predictions
+johnny_d <- data.frame(
+	class = factor(
+		"1st", 
+		levels = c(
+			"1st", "2nd", "3rd", "deck crew", "engineering crew", 
+			"restaurant staff", "victualling crew"
+		)
+	),
+	gender = factor("male", levels = c("female", "male")),
+	age = 8, 
+	sibsp = 0, 
+	parch = 0, 
+	fare = 72,
+	embarked = factor(
+		"Southampton", 
+		levels = c("Belfast", "Cherbourg", "Queenstown", "Southampton")
+	)
+)
 
+henry <- data.frame(
+	class = factor(
+		"1st", levels = c(
+			"1st", "2nd", "3rd", "deck crew", "engineering crew", 
+			"restaurant staff", "victualling crew"
+		)
+	),
+	gender = factor("male", levels = c("female", "male")),
+	age = 47, 
+	sibsp = 0, 
+	parch = 0, 
+	fare = 25,
+	embarked = factor(
+		"Cherbourg", 
+		levels = c("Belfast",	"Cherbourg", "Queenstown", "Southampton")
+	)
+)
+
+titanic_test <- bind_rows(johnny_d, henry) %>% 
+	mutate(pax = c("johnny_d", "henry"), .before = 1)
+titanic_test
+
+list(
+	"lm" = logit_class_fit_wrkfl,
+	"rf" = rf_class_fit_wrkfl,
+	"xgb" = xgb_class_fit_wrkfl,
+	"svm" = svm_class_fit_wrkfl
+) %>% 
+	map(augment, new_data = titanic_test) %>% 
+	bind_rows() %>% 
+	select(pax, contains(".pred")) %>% 
+	mutate("method" = c("logit", "logit", "rf", "rf", "xgb", "xgb", "svm", "svm"), .before = 2) %>% 
+	arrange(desc(pax))
 
 
 # * Apartment Prices Models -----------------------------------------------
 
-# ** Linear Regression
+apartments_train <- apartments 
 
+# ** Linear Regression
+lm_reg_spec <- linear_reg(mode = "regression") %>% set_engine("lm") 
+lm_reg_fit_wrkfl <- workflow() %>% 
+	add_model(lm_reg_spec) %>% 
+	add_formula(m2_price ~ .) %>% 
+	fit(data = apartments_train)
 
 # ** Random Forest
-
+rf_reg_spec <- rand_forest(mode = "regression") %>% set_engine("ranger") 
+rf_reg_fit_wrkfl <- workflow() %>% 
+	add_model(rf_reg_spec) %>% 
+	add_formula(m2_price ~ .) %>% 
+	fit(data = apartments_train)
 
 # ** XGBoost
-
+xgb_reg_spec <- boost_tree(mode = "regression") %>% set_engine("xgboost") 
+xgb_reg_fit_wrkfl <- workflow() %>% 
+	add_model(xgb_reg_spec) %>% 
+	add_formula(m2_price ~ .) %>% 
+	fit(data = apartments_train)
 
 # ** SVM
+svm_reg_spec <- svm_rbf(mode = "regression") %>% set_engine("kernlab") 
+svm_reg_fit_wrkfl <- workflow() %>% 
+	add_model(svm_reg_spec) %>% 
+	add_formula(m2_price ~ .) %>% 
+	fit(data = apartments_train)
+
+# ** Predictions 
+apartments_test <- DALEX::apartments_test %>%
+	as_tibble() %>% 
+	rename_with(~ str_replace_all(., "\\.", "_"))
+apartments_test
+
+list(
+	"lm" = lm_reg_fit_wrkfl,
+	"rf" = rf_reg_fit_wrkfl,
+	"xgb" = xgb_reg_fit_wrkfl,
+	"svm" = svm_reg_fit_wrkfl
+) %>% 
+	map(augment, new_data = apartments_test[1:2, ]) %>% 
+	bind_rows() %>% 
+	select(m2_price, contains(".pred")) %>% 
+	mutate("method" = c(rep("lm", 2), rep("rf", 2), rep("xgb", 2), rep("svm", 2)), .before = 2) %>% 
+	arrange(desc(m2_price))
+
+
+# * Explainers ------------------------------------------------------------
+
+# Model-objects created with different libraries may have different internal 
+# structures. Thus, first, we have got to create an “explainer,” i.e., an object 
+# that provides an uniform interface for different models. Toward this end, we 
+# use the explain() function from the DALEX package (Biecek 2018). There is only 
+# one argument that is required by the function, i.e., model. The argument is 
+# used to specify the model-object with the fitted form of the model.
+
+# Application of function explain() provides an object of class explainer. Thus, 
+# each explainer-object contains all elements needed to create a model explanation. 
+
+?explain()
+
+# explain does not work properly with tidymodels objects
+explain(
+	model = logit_class_fit_wrkfl, 
+	data = titanic_train %>% select(-survived),
+	y = titanic_train$survived == "yes", 
+	label = "Logistic Regression",
+	type = "classification"
+)
+
+# DALEX is designed to work with various black-box models like tree ensembles, 
+# linear models, neural networks etc. Unfortunately R packages that create such 
+# models are very inconsistent. Different tools use different interfaces to 
+# train, validate and use models. One of those tools, which is one of the most 
+# popular one is the tidymodels package. We need to use dedicated explain 
+# function for it.
+DALEXtra::exp
+?explain_tidymodels()
+explain_tidymodels(
+	model = logit_class_fit_wrkfl, 
+	data = titanic_train %>% select(-survived),
+	y = titanic_train$survived == "yes", 
+	label = "Logistic Regression",
+	type = "classification"
+)
+
+
+# ** Titanic Explainers
+titanic_logit_exp <- explain_tidymodels(
+	model = logit_class_fit_wrkfl, 
+	data = titanic_train %>% select(-survived),
+	y = titanic_train$survived == "yes", 
+	label = "Logistic Regression",
+	type = "classification"
+)
+titanic_rf_exp <- explain_tidymodels(
+	model = rf_class_fit_wrkfl,
+	data = titanic_train %>% select(-survived),
+	y = titanic_train$survived == "yes",
+	label = "Random Forest",
+	type = "classification"
+)
+titanic_xgb_exp <- explain_tidymodels(
+	model = xgb_class_fit_wrkfl,
+	data = titanic_train %>% select(-survived),
+	y = titanic_train$survived == "yes",
+	label = "XGBoost",
+	type = "classification"
+)
+titanic_svm_exp <- explain_tidymodels(
+	model = svm_class_fit_wrkfl,
+	data = titanic_train %>% select(-survived),
+	y = titanic_train$survived == "yes",
+	label = "Support Vector Machine",
+	type = "classification"
+)
+
+# ** Apartment Prices Explainers
+apartments_lm_exp <- explain_tidymodels(
+	model = lm_reg_fit_wrkfl,
+	data = apartments_train %>% select(-m2_price),
+	y = apartments_train$m2_price,
+	label = "Linear Regression",
+	type = "regression"
+)
+apartments_rf_exp <- explain_tidymodels(
+	model = rf_reg_fit_wrkfl,
+	data = apartments_train %>% select(-m2_price),
+	y = apartments_train$m2_price,
+	label = "Random Forest",
+	type = "regression"
+)
+apartments_xgb_exp <- explain_tidymodels(
+	model = xgb_reg_fit_wrkfl,
+	data = apartments_train %>% select(-m2_price),
+	y = apartments_train$m2_price,
+	label = "XGBoost",
+	type = "regression"
+)
+apartments_svm_exp <- explain_tidymodels(
+	model = svm_class_fit_wrkfl,
+	data = apartments_train %>% select(-m2_price),
+	y = apartments_train$m2_price,
+	label = "Support Vector Machine",
+	type = "regression"
+)
 
 
 
@@ -388,30 +601,6 @@ apartments
 
 
 # Global Explainers -------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
