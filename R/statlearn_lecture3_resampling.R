@@ -69,11 +69,9 @@ cells %>%
 # The rates of the classes are somewhat imbalanced; there are more poorly 
 # segmented cells than well-segmented cells.
 
-cells %>% 
-	skimr::skim() 
+cells %>% skimr::skim() 
 	
-cells %>% 
-	DataExplorer::create_report()
+cells %>% DataExplorer::create_report()
 
 
 # * Data Splitting --------------------------------------------------------
@@ -191,8 +189,8 @@ rf_fit
 
 # During a modeling project, we might create a variety of different 
 # models. To choose between them, we need to consider how well these 
-# models do, as measured by some performance statistics. In our example 
-# in this article, some options we could use are:
+# models do, as measured by some performance statistics. In our example, 
+# some options we could use are:
 # 	
 # 	 * the area under the Receiver Operating Characteristic (ROC) curve, and
 #    * overall classification accuracy.
@@ -313,10 +311,9 @@ rf_testing_pred %>%                   # test set predictions
 
 rsample::loo_cv()
 rsample::mc_cv()
-rsample::nested_cv()
 
 set.seed(123)
-folds <- vfold_cv(cell_train, v = 10)
+folds <- vfold_cv(cell_train, v = 5)
 folds
 
 

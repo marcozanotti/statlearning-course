@@ -23,7 +23,8 @@ pkgs <- c(
   "discrim",
   "dslabs", 
   "patchwork",
+  "ggmosaic",
   "DALEX",
-  "ggmosaic"
+  "DALEXtra"
 )
 install_and_load(pkgs)

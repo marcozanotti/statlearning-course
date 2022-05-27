@@ -100,7 +100,7 @@ splits <- initial_split(wind)
 
 # * Cross-Validation ------------------------------------------------------
 
-# use a 5-fold cross-validation
+# use a 5-fold cross-validation (5 just for computing time)
 set.seed(123)
 folds <- rsample::vfold_cv(training(splits), v = 5)
 

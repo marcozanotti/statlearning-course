@@ -63,8 +63,9 @@ flight_data %>%
 
 flight_data %>% glimpse()
 
-flight_data %>% 
-	skimr::skim(dest, carrier) 
+flight_data %>% skimr::skim(dest, carrier) 
+
+flight_data %>% skimr::skim()
 
 # First, notice that the variable we created called arr_delay is a 
 # factor variable; it is important that our outcome variable for 
@@ -78,8 +79,7 @@ flight_data %>%
 # Third, there are 104 flight destinations contained in dest and 16 distinct 
 # carriers.
 
-flight_data %>% 
-	DataExplorer::create_report()
+flight_data %>% DataExplorer::create_report()
 
 # Because we’ll be using a simple logistic regression model, the variables 
 # dest and carrier will be converted to dummy variables. However, some 
@@ -106,7 +106,7 @@ data_split <- initial_split(flight_data, prop = 0.75) # Put 3/4 of the data into
 data_split
 
 train_data <- training(data_split)
-test_data  <- testing(data_split)
+test_data <- testing(data_split)
 
 
 

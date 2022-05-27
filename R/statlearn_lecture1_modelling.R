@@ -247,7 +247,7 @@ pred_data %>%
 
 # Bayesian Model ----------------------------------------------------------
 
-# W are interested in knowing if the results would be different if the model 
+# We are interested in knowing if the results would be different if the model 
 # were estimated using a Bayesian approach. In such an analysis, a prior 
 # distribution needs to be declared for each model parameter that represents 
 # the possible values of the parameters (before being exposed to the observed 
@@ -335,6 +335,7 @@ compare_pred_data <- bind_rows(
 	pred_data %>% add_column("model" = "OLS"),
 	bayes_pred_data %>% add_column("model" = "Bayes")
 )
+compare_pred_data
 
 compare_pred_data %>% 
 	ggplot(aes(x = food_regime, col = model)) + 

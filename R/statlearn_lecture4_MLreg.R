@@ -157,8 +157,7 @@ wrkfl_fit_elanet %>%
 
 model_spec_mars <- mars(
 	mode = "regression",
-	prod_degree = 1, 
-	prune_method = "backward"
+	num_terms = 10
 ) %>%
 	set_engine("earth", endspan = 100)
 
@@ -456,8 +455,8 @@ wrkfl_fit_xgb %>%
 wrkfl_fit_lightgbm %>% 
 	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
 
-wrkfl_fit_catboost %>% 
-	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
+# wrkfl_fit_catboost %>% 
+# 	calibrate_evaluate_plot(y = "SalePrice", mode = "regression", type = "testing")
 
 
 
