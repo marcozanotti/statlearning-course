@@ -129,10 +129,10 @@ tree_spec
 # There are different grid functions from the dials package that one
 # can use, based on different approaches to chose parameters' values.
 
-grid_regular()
-grid_random()
-grid_max_entropy()
-grid_latin_hypercube()
+?grid_regular()
+?grid_random()
+?grid_max_entropy()
+?grid_latin_hypercube()
 
 # One can explore the different hyperparameter to tune via the args() 
 # function, this allows to see which parsnip object arguments are available.
@@ -223,8 +223,7 @@ tree_res %>% show_best("accuracy", n = 3)
 # We can also use the select_best() function to pull out the single 
 # set of hyperparameter values for our best decision tree model.
 	
-best_tree <- tree_res %>%
-	select_best("accuracy")
+best_tree <- tree_res %>%	select_best("accuracy")
 best_tree
 
 # These are the values for tree_depth and cost_complexity that
@@ -363,7 +362,7 @@ best_model
 
 # * Re-fitting ------------------------------------------------------------
 
-wrkfl_fit_final <-	wrkfl %>%	
+wrkfl_fit_final <- wrkfl %>%	
 	finalize_workflow(best_model) %>% 
   last_fit(splits) 
 
@@ -429,7 +428,7 @@ model_grid <- grid_regular(
 	mtry(range = c(1, 40)),
 	min_n(),
 	tree_depth(),
-	levels = 3
+	levels = 10
 )
 model_grid
 model_grid %>% map(unique)

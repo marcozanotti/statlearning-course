@@ -470,7 +470,7 @@ simple_ensemble <- function(
 			) %>%
 			bind_rows()
 		pred_met <- bind_rows(
-			tibble("Member" = "ensemble", "Metric" = "rmse", "Estimate" = ensemble_met),
+			tibble("Member" = "ensemble", "Metric" = "accuracy", "Estimate" = ensemble_met),
 			members_met
 		)
 		

@@ -325,7 +325,7 @@ h2o_auto <- h2o.automl(
 	x = x, y = y,
 	training_frame = train,
 	nfolds = 5,
-	max_models = 10,
+	max_models = 5,
 	# max_runtime_secs = 30,
 	# max_runtime_secs_per_model = 30,
 	# exclude_algos = c("DeepLearnig"),
@@ -345,9 +345,9 @@ print(lb, n = nrow(lb)) # 10 models + 11 stacks
 h2o_best <- h2o.get_best_model(h2o_auto)
 h2o_best
 
-h2o.get_best_model(h2o_auto, criterion = "logloss") # get the best model using logloss sort metric
+h2o.get_best_model(h2o_auto, criterion = "mae") # get the best model using logloss sort metric
 h2o.get_best_model(h2o_auto, algorithm = "xgboost") # get the best XGBoost model using default sort metric
-h2o.get_best_model(h2o_auto, algorithm = "xgboost", criterion = "logloss") # get the best XGBoost model, ranked by logloss
+h2o.get_best_model(h2o_auto, algorithm = "xgboost", criterion = "mae") # get the best XGBoost model, ranked by logloss
 
 
 # * Evaluate Results ------------------------------------------------------
@@ -396,9 +396,9 @@ h2o.shutdown(prompt = FALSE)
 
 # The package is not yet on CRAN and can be installed with
 devtools::install_github("stevenpawley/h2oparsnip")
-library(h2oparsnip)
 
 h2o.init()
+library(h2oparsnip)
 
 
 # * Data ------------------------------------------------------------------

@@ -129,7 +129,7 @@ metric <- metric_set(rmse)
 # Model definitions specify the form of candidate ensemble members.
 
 # To be used in the same ensemble, each of these model definitions must share 
-# the same resample. This rsample rset object, when paired with the model 
+# the same resample. This rsample set object, when paired with the model 
 # definitions, can be used to generate the tuning/fitting results objects 
 # for the candidate ensemble members with tune.
 
@@ -162,7 +162,7 @@ wrkfl_fit_lm <- wrkfl_lm %>%
 	fit_resamples(
 		resamples = folds,
 		metrics = metric,
-		control = control_stack_resamples()
+		control = control_stack_resamples() # control options to save pred and workflows to be used by the meta-learner
 	)
 
 
@@ -170,7 +170,7 @@ wrkfl_fit_lm <- wrkfl_lm %>%
 
 # Spline Recipe
 rcp_spec_spline <- rcp_spec %>%
-	step_ns(rotor_diameter_m, deg_free = tune::tune("length"))
+	step_ns(rotor_diameter_m, deg_free = tune::tune("length")) # tune a recipe parameter!!!!
 
 # Workflow
 wrkfl_spline <- workflow() %>% 
@@ -216,7 +216,6 @@ wrkfl_fit_svm <- wrkfl_svm %>%
 
 
 # Stacking Ensemble -------------------------------------------------------
-
 
 # * Data Stack ------------------------------------------------------------
 
@@ -284,6 +283,7 @@ test_pred <- bind_cols(
 	testing(splits) %>%	select(turbine_rated_capacity_kw),
 	predict(fit_model_stack, testing(splits))
 )
+test_pred
 
 rmse(test_pred, truth = turbine_rated_capacity_kw, estimate = .pred) %>% 
 	mutate(member = "stack")
@@ -295,6 +295,7 @@ test_pred_member <- bind_cols(
 	testing(splits) %>%	select(turbine_rated_capacity_kw),
 	predict(fit_model_stack, testing(splits), members = TRUE)
 )
+test_pred_member
 
 colnames(test_pred_member) %>%
 	map_dfr(rmse, truth = turbine_rated_capacity_kw, data = test_pred_member) %>%

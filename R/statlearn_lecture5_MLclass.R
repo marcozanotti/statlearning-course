@@ -320,7 +320,7 @@ model_spec_bag <- bag_tree(
 	tree_depth = 10,
 	min_n = 2
 ) %>%
-	set_engine("rpart",	times = 50) # 25 ensemble members
+	set_engine("rpart",	times = 50) # 50 ensemble members
 
 # * Workflows -------------------------------------------------------------
 
