@@ -397,11 +397,40 @@ h2o.shutdown(prompt = FALSE)
 # The package is not yet on CRAN and can be installed with
 devtools::install_github("stevenpawley/h2oparsnip")
 
+library(h2o)
+
+Sys.setenv(JAVA_HOME = "/usr/lib/jvm/jdk-17/")
 h2o.init()
 library(h2oparsnip)
 
+source("R/utils.R")
+source("R/packages.R")
+
 
 # * Data ------------------------------------------------------------------
+
+wind_raw <- read_csv("data/wind.csv")
+wind <-	wind_raw %>%
+	dplyr::select(
+		province_territory, 
+		total_project_capacity_mw,
+		turbine_rated_capacity_kw = turbine_rated_capacity_k_w,
+		rotor_diameter_m,
+		hub_height_m,
+		year = commissioning_date
+	) %>%
+	group_by(province_territory) %>%
+	mutate(
+		year = as.numeric(year),
+		province_territory = case_when(
+			n() < 50 ~ "Other",
+			TRUE ~ province_territory
+		) %>% as.factor()
+	) %>%
+	dplyr::filter(!is.na(year)) %>%
+	ungroup() %>% 
+	drop_na()
+wind
 
 # split into training and testing sets
 set.seed(123)
@@ -500,7 +529,7 @@ set.seed(123)
 grid_rf <- grid_regular(
 	mtry(range = c(1, 20)),
 	min_n(),
-	levels = 3
+	levels = 2
 )
 
 # Fit
@@ -535,7 +564,7 @@ set.seed(123)
 grid_gbm <- grid_regular(
 	mtry(range = c(1, 20)),
 	min_n(),
-	levels = 3
+	levels = 2
 )
 
 # Fit
@@ -569,7 +598,7 @@ set.seed(123)
 grid_nnet <- grid_regular(
 	epochs(),
 	hidden_units(),
-	levels = 3
+	levels = 2
 )
 
 # Fit
@@ -631,7 +660,7 @@ best_models <- model_results %>% map(select_best, metric = "rmse")
 
 wrkfls_fit_final <- map2(wrkfls, best_models, finalizing_and_fitting) 
 
-wrkfl_fit_final %>%	
+wrkfls_fit_final %>%	
 	map(collect_metrics) %>% 
 	map2(
 		names(wrkfls), 

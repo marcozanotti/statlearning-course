@@ -77,8 +77,8 @@
 # complex the network will be. Layers are considered dense (fully connected) 
 # when all the nodes in each successive layer are connected. Consequently, the 
 # more layers and nodes you add the more opportunities for new features to be 
-# learned (commonly referred to as the model’s capacity).36 Beyond the input 
-# layer, which is just our original pre dictor variables, there are two main 
+# learned (commonly referred to as the model’s capacity). Beyond the input 
+# layer, which is just our original predictor variables, there are two main 
 # types of layers to consider: hidden layers and an output layer.
 
 # Hidden layers
@@ -676,7 +676,7 @@ net_fit <- model %>%
 		epochs = 25,
 		batch_size = 128,
 		validation_split = 0.2,
-		verbose = FALSE
+		verbose = TRUE
 	)
 net_fit
 ## Trained on 48,000 samples, validated on 12,000 samples (batch_size=128, epochs=25)
@@ -697,6 +697,9 @@ head(preds) %>% round()
 
 preds_class <- predict_classes(model, mnist_test_x) 
 head(preds_class)
+
+preds_prob <- predict_proba(model, mnist_test_x)
+head(preds_prob) %>% round(1)
 
 # By default predict will return the output of the last Keras layer. In our case
 # this is the probability for each class. You can also use predict_classes and 
@@ -794,7 +797,7 @@ library(patchwork)
 (res_list[[1]] + res_list[[4]] + res_list[[7]]) / 
 	(res_list[[2]] + res_list[[5]] + res_list[[8]]) / 
 	(res_list[[3]] + res_list[[6]] + res_list[[9]]) +
-	plot_layout(guides = "collect") &
+	plot_layout(guides = "collect") +
 	ggplot2::theme_minimal()
 
 # The models that performed best had 2–3 hidden layers with a medium to large 
@@ -883,7 +886,7 @@ for (i in 1:nrow(params)) {
 (batch_list[[1]] + batch_list[[4]] + batch_list[[7]]) / 
 	(batch_list[[2]] + batch_list[[5]] + batch_list[[8]]) / 
 	(batch_list[[3]] + batch_list[[6]] + batch_list[[9]]) +
-	plot_layout(guides = "collect") &
+	plot_layout(guides = "collect") +
 	ggplot2::theme_minimal()
 
 # If we add batch normalization to each of the previously assessed models, 
