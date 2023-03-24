@@ -29,7 +29,7 @@ state-of-the-art techniques are presented through hands-on tutorial
 with **R**. The focus will be on business-oriented libraries allowing to 
 integrate statistical models into production-ready tools.     
 
-* 10 hours: practical lectures on the main contents  
+Specific business needs may be discussed during the lectures.
 
 
 ## Contents
@@ -56,21 +56,18 @@ Methods:
 
 ## Duration & Calendar
 
-The course is divided into 5 lectures (2 hours each).
+The course has a duration of 20 hours.
 
-1. Day yyyy-mm-dd, 16.30 - 18.30
-2. Day yyyy-mm-dd, 16.30 - 18.30
-3. Day yyyy-mm-dd, 16.30 - 18.30
-4. Day yyyy-mm-dd, 16.30 - 18.30
-5. Day yyyy-mm-dd, 16.30 - 18.30
 
-Lectures take place at ...   
+## Beneficiaries
+
+This course is intended for data scientist, data analyst, statisticians, 
+IT specialists, developers, project managers and business leaders who want 
+to develop the most in-demand skills to solve machine learning problems.
 
 
 ## Requirements
 
-* Lecture 0 - Tidyverse
+- Basic statistic and programming knowledge.
+- Lecture 0 of [R Coding](https://marcozanotti.github.io/rcoding-course/)
 
-For more information about the course contact zanottimarco17@gmail.com
-or look at the 
-[Course Syllabus](https://marcozanotti.github.io/statlearning-course/general-infos/statlearn_syllabus.html)
