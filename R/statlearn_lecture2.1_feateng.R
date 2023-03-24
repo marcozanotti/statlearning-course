@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 2.1: Features Engineering - The House Prices Dataset ------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

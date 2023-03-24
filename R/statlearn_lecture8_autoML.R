@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 8: Automatic ML -------------------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

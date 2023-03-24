@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 2: Features Engineering -----------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

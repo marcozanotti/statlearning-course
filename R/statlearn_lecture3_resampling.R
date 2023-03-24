@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 3: Resampling ---------------------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 5: Classification with ML Models --------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

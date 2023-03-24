@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 4: Regression with ML Models ------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

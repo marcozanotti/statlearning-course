@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 1: Model Building -----------------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

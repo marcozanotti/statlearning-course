@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 7: Ensemble Learning --------------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

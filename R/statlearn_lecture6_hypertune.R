@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 6: Hyperparameter Tuning ----------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:

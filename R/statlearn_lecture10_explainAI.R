@@ -1,7 +1,6 @@
 # Statistical Learning ----
 
 # Lecture 10: Explainable AI -----------------------------------------------
-# 2021/2022
 # Marco Zanotti
 
 # Goals:
