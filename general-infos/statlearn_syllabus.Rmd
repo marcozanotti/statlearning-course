@@ -103,18 +103,18 @@ knitr::opts_chunk$set(echo = TRUE)
 - Tidymodels integration, h2oparsnip  
 
 
-## Lecture 6: Deep Neural Networks
+<!-- ## Lecture 6: Deep Neural Networks -->
 
-**Tensorflow**  
+<!-- **Tensorflow**   -->
 
-**Keras**:  
-- network structure  
-- activation functions  
-- backpropagation  
-- training  
-- evaluation  
-- tuning  
+<!-- **Keras**:   -->
+<!-- - network structure   -->
+<!-- - activation functions   -->
+<!-- - backpropagation   -->
+<!-- - training   -->
+<!-- - evaluation   -->
+<!-- - tuning   -->
 
 
-## Lecture 7: Explainable AI
+<!-- ## Lecture 7: Explainable AI -->
 

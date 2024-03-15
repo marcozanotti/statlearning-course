@@ -1,0 +1,55 @@
+---
+title: "Statistical Learning, Machine Learning & Artificial Intelligence"
+author: "Marco Zanotti"
+date: ""
+output:
+  pdf_document: default
+  rmdformats::downcute:
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Obiettivi
+
+Il corso introduce i più importanto algoritmi e strumenti statistici di 
+machine learning. Il focus è sull'apprendimento delle tecniche più in uso 
+attraverso applicazioni pratice in **R**, concentrandosi sull'utilizzo del 
+framework maggiormante utilizzato in ambito business: **Tidymodels**.  
+
+
+## Contenuti
+
+* Tidymodels Basics  
+* Tidymodels Features Engineering (Recipes)  
+* Tidymodels Modelling (Engines & Workflows)  
+* Tidymodels Hyperparameter Tuning (Tune)  
+* Ensemble Learning (Stacks)  
+* Automatic Machine Learning (H2O)  
+
+Metodi:  
+- Linear Regression, Logistic Regression, Ridge, LASSO, Elastic Net, MARS  
+- CART, Bagging, Random Forest, XGBoost, Cubist  
+- SVM, KNN, Naive Bayes    
+- AutoML  
+
+Eventuali esigenze aziendali riguardo a tematiche di interesse
+possono essere valutate insieme al docente per rimodulare il 
+corso sulla base dei desiderata del cliente.  
+
+
+## Durata
+
+Il corso ha una durata di 20 ore.
+
+
+## Destinatari
+
+I destinatari di questo corso sono data scientist, data analyst, 
+statistici, professionisti IT, sviluppatori, capi progetto che 
+vogliono acquisire know how di machine learning e intelligenza artificiale
+per risolvere le esigenze del proprio business.  
+
